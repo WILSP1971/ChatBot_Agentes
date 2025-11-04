@@ -6,6 +6,7 @@ using iText.Kernel.Font;
 using iText.IO.Font.Constants;
 using iText.Kernel.Colors;
 using iText.Layout.Borders;
+using WhatsAppChatbotSystem.Models;
 
 namespace WhatsAppChatbotSystem.Services;
 

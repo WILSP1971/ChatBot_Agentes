@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WhatsAppChatbotSystem.Services;
+using WhatsAppChatbotSystem.Models;
 
 namespace WhatsAppChatbotSystem.Controllers;
 

@@ -91,4 +91,3 @@ Actualizar `appsettings.json` con tus credenciales:
 ## 📞 Soporte
 
 Revisar los logs de la aplicación para debugging.
-# ChatBot_Agentes

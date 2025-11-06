@@ -1,8 +1,80 @@
 // historia-clinica-modal.js
-// Modal interactivo mejorado para diligenciar historia clínica
+// Modal interactivo mejorado para diligenciar historia clínica con diagnósticos en grid
 
 (function() {
     'use strict';
+
+    // Variables globales para diagnósticos
+    let diagnosticosAgregados = [];
+    let diagnosticosDisponibles = [];
+    let tiposIdentificacion = [];
+    let departamentos = [];
+
+    // Cargar datos de listas desde el backend
+    async function cargarDatosListas() {
+        try {
+            // Cargar tipos de identificación
+            const respTiposId = await fetch('/api/HistoriaClinica/tipos-identificacion');
+            tiposIdentificacion = await respTiposId.json();
+
+            // Cargar departamentos
+            const respDepartamentos = await fetch('/api/HistoriaClinica/departamentos');
+            departamentos = await respDepartamentos.json();
+
+            // Cargar diagnósticos para autocompletar
+            const respDiagnosticos = await fetch('/api/HistoriaClinica/diagnosticos');
+            diagnosticosDisponibles = await respDiagnosticos.json();
+
+            // Popular los selects
+            popularSelectTipoIdentificacion();
+            popularSelectDepartamento();
+            inicializarAutocompleteDiagnostico();
+        } catch (error) {
+            console.error('Error al cargar datos de listas:', error);
+        }
+    }
+
+    function popularSelectTipoIdentificacion() {
+        const select = document.getElementById('tipoIdentificacion');
+        if (select && tiposIdentificacion.length > 0) {
+            select.innerHTML = '<option value="">Seleccione...</option>' + 
+                tiposIdentificacion.map(tipo => 
+                    `<option value="${tipo.codigo}">${tipo.descripcion}</option>`
+                ).join('');
+        }
+    }
+
+    function popularSelectDepartamento() {
+        const select = document.getElementById('departamento');
+        if (select && departamentos.length > 0) {
+            select.innerHTML = '<option value="">Seleccione...</option>' + 
+                departamentos.map(dept => 
+                    `<option value="${dept.codigo}">${dept.nombre}</option>`
+                ).join('');
+        }
+    }
+
+    function inicializarAutocompleteDiagnostico() {
+        const input = document.getElementById('codigoDiagnostico');
+        const datalist = document.getElementById('diagnosticosList');
+        
+        if (input && datalist && diagnosticosDisponibles.length > 0) {
+            datalist.innerHTML = diagnosticosDisponibles.map(diag => 
+                `<option value="${diag.codigo}" data-descripcion="${diag.descripcion}">${diag.codigo} - ${diag.descripcion}</option>`
+            ).join('');
+
+            input.addEventListener('input', function() {
+                const codigo = this.value;
+                const diagnostico = diagnosticosDisponibles.find(d => d.codigo === codigo);
+                
+                if (diagnostico) {
+                    document.getElementById('descripcionDiagnostico').value = diagnostico.descripcion;
+                } else {
+                    document.getElementById('descripcionDiagnostico').value = '';
+                }
+            });
+        }
+    }
 
     // Agregar estilos CSS mejorados para el modal
     const styles = `
@@ -46,7 +118,7 @@
                 left: 50%;
                 transform: translate(-50%, -50%);
                 width: 95%;
-                max-width: 1000px;
+                max-width: 1100px;
                 max-height: 92vh;
                 background: white;
                 border-radius: 20px;
@@ -113,6 +185,31 @@
 
             .hc-modal-header h5 i {
                 font-size: 1.8rem;
+            }
+
+            .hc-close-btn {
+                background: rgba(255, 255, 255, 0.2);
+                border: none;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                position: relative;
+                z-index: 1;
+            }
+
+            .hc-close-btn:hover {
+                background: rgba(255, 255, 255, 0.3);
+                transform: rotate(90deg) scale(1.1);
+            }
+
+            .hc-close-btn i {
+                color: white;
+                font-size: 1.5rem;
             }
             
             .hc-modal-body {
@@ -223,74 +320,124 @@
             }
 
             .hc-form-group label i {
-                color: #075E54;
+                color: #128C7E;
+                font-size: 1.1rem;
             }
 
-            .hc-form-group label .required {
-                color: #ef4444;
-                font-weight: 700;
+            .hc-required {
+                color: #EF4444;
+                font-weight: bold;
             }
             
-            .hc-form-group input,
-            .hc-form-group select,
-            .hc-form-group textarea {
+            .hc-input, .hc-select, .hc-textarea {
                 width: 100%;
-                padding: 0.75rem 1rem;
-                border: 2px solid #e5e7eb;
-                border-radius: 10px;
+                padding: 0.875rem 1rem;
+                border: 2px solid #E5E7EB;
+                border-radius: 12px;
                 font-size: 0.95rem;
-                transition: all 0.3s;
+                transition: all 0.3s ease;
                 background: white;
+                font-family: 'Segoe UI', sans-serif;
             }
 
-            .hc-form-group input:focus,
-            .hc-form-group select:focus,
-            .hc-form-group textarea:focus {
+            .hc-input:focus, .hc-select:focus, .hc-textarea:focus {
                 outline: none;
-                border-color: #25D366;
-                box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.1);
-                background: #FAFFFE;
+                border-color: #128C7E;
+                box-shadow: 0 0 0 4px rgba(18, 140, 126, 0.1);
+                background: #FAFAFA;
             }
 
-            .hc-form-group input:hover,
-            .hc-form-group select:hover,
-            .hc-form-group textarea:hover {
-                border-color: #128C7E;
+            .hc-input:read-only {
+                background: #F3F4F6;
+                cursor: not-allowed;
             }
-            
-            .hc-form-group textarea {
-                min-height: 100px;
+
+            .hc-textarea {
+                min-height: 120px;
                 resize: vertical;
-                font-family: inherit;
+                font-family: 'Segoe UI', sans-serif;
             }
-            
-            .hc-form-row {
+
+            .hc-section-title {
+                font-size: 1.2rem;
+                font-weight: 700;
+                color: #075E54;
+                margin: 2rem 0 1.5rem 0;
+                padding-bottom: 0.75rem;
+                border-bottom: 3px solid #E8F5E9;
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+            }
+
+            .hc-section-title i {
+                font-size: 1.5rem;
+                color: #25D366;
+            }
+
+            .hc-row {
                 display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
                 gap: 1.5rem;
+                margin-bottom: 1.5rem;
             }
-            
+
+            .hc-checkbox-group {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+                gap: 1rem;
+                margin-top: 1rem;
+            }
+
+            .hc-checkbox-item {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 0.75rem;
+                background: #F9FAFB;
+                border-radius: 8px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+
+            .hc-checkbox-item:hover {
+                background: #E8F5E9;
+                transform: translateX(5px);
+            }
+
+            .hc-checkbox-item input[type="checkbox"] {
+                width: 20px;
+                height: 20px;
+                cursor: pointer;
+                accent-color: #25D366;
+            }
+
+            .hc-checkbox-item label {
+                margin: 0 !important;
+                cursor: pointer;
+                font-weight: 600 !important;
+            }
+
             .hc-modal-footer {
                 padding: 1.5rem 2rem;
-                background: linear-gradient(to top, #f9fafb, white);
+                border-top: 2px solid #E5E7EB;
                 display: flex;
-                justify-content: flex-end;
                 gap: 1rem;
-                border-top: 2px solid #e5e7eb;
-                box-shadow: 0 -4px 12px rgba(0,0,0,0.05);
+                justify-content: flex-end;
+                background: #FAFAFA;
             }
-            
+
             .hc-btn {
-                padding: 0.75rem 2rem;
-                border-radius: 10px;
-                font-weight: 700;
-                cursor: pointer;
+                padding: 0.875rem 2rem;
                 border: none;
+                border-radius: 25px;
+                font-weight: 700;
+                font-size: 0.95rem;
+                cursor: pointer;
                 transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
                 display: flex;
                 align-items: center;
-                gap: 0.5rem;
-                font-size: 1rem;
+                gap: 0.75rem;
                 position: relative;
                 overflow: hidden;
             }
@@ -305,495 +452,647 @@
                 border-radius: 50%;
                 background: rgba(255, 255, 255, 0.3);
                 transform: translate(-50%, -50%);
-                transition: width 0.6s, height 0.6s;
+                transition: width 0.4s, height 0.4s;
             }
 
             .hc-btn:hover::before {
-                width: 300px;
-                height: 300px;
+                width: 300%;
+                height: 300%;
             }
 
-            .hc-btn span {
+            .hc-btn span, .hc-btn i {
                 position: relative;
                 z-index: 1;
+            }
+
+            .hc-btn:hover {
+                transform: translateY(-3px);
+                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+            }
+
+            .hc-btn:active {
+                transform: translateY(-1px);
+            }
+
+            .hc-btn-primary {
+                background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(37, 211, 102, 0.4);
+            }
+
+            .hc-btn-secondary {
+                background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%);
+                color: white;
+                box-shadow: 0 4px 12px rgba(107, 114, 128, 0.3);
             }
 
             .hc-btn i {
                 font-size: 1.2rem;
-                position: relative;
-                z-index: 1;
             }
-            
-            .hc-btn-primary {
+
+            .hc-help-text {
+                font-size: 0.85rem;
+                color: #6B7280;
+                margin-top: 0.5rem;
+                font-style: italic;
+            }
+
+            /* Estilos para el grid de diagnósticos */
+            .diagnostico-form-container {
+                background: #F9FAFB;
+                border: 2px solid #E5E7EB;
+                border-radius: 12px;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+            }
+
+            .diagnostico-add-btn {
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                color: white;
+                padding: 0.75rem 1.5rem;
+                border: none;
+                border-radius: 20px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                display: flex;
+                align-items: center;
+                gap: 0.5rem;
+                margin-top: 1rem;
+            }
+
+            .diagnostico-add-btn:hover {
+                transform: translateY(-2px);
+                box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
+            }
+
+            .diagnosticos-grid {
+                margin-top: 1.5rem;
+                border: 2px solid #E5E7EB;
+                border-radius: 12px;
+                overflow: hidden;
+                background: white;
+            }
+
+            .diagnosticos-grid table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .diagnosticos-grid thead {
                 background: linear-gradient(135deg, #075E54 0%, #128C7E 100%);
                 color: white;
-                box-shadow: 0 4px 12px rgba(7, 94, 84, 0.3);
-            }
-            
-            .hc-btn-primary:hover {
-                transform: translateY(-2px) scale(1.02);
-                box-shadow: 0 8px 20px rgba(7, 94, 84, 0.4);
             }
 
-            .hc-btn-primary:active {
-                transform: translateY(0) scale(0.98);
-            }
-            
-            .hc-btn-secondary {
-                background: linear-gradient(135deg, #e5e7eb, #d1d5db);
-                color: #1F2937;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            }
-            
-            .hc-btn-secondary:hover {
-                background: linear-gradient(135deg, #d1d5db, #9ca3af);
-                transform: translateY(-2px) scale(1.02);
-                box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
-            }
-            
-            .hc-close-btn {
-                background: rgba(255, 255, 255, 0.2);
-                border: none;
-                color: white;
-                font-size: 1.8rem;
-                cursor: pointer;
-                padding: 0.5rem;
-                width: 40px;
-                height: 40px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                border-radius: 50%;
-                transition: all 0.3s;
-                position: relative;
-                z-index: 1;
-            }
-
-            .hc-close-btn:hover {
-                background: rgba(239, 68, 68, 0.9);
-                transform: rotate(90deg) scale(1.1);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-            }
-            
-            .hc-antecedentes-grid {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-                gap: 1rem;
-            }
-            
-            .hc-checkbox-group {
-                display: flex;
-                align-items: center;
-                gap: 0.75rem;
-                padding: 0.75rem;
-                border-radius: 10px;
-                transition: all 0.3s;
-                cursor: pointer;
-                border: 2px solid transparent;
-            }
-
-            .hc-checkbox-group:hover {
-                background: rgba(37, 211, 102, 0.05);
-                border-color: #25D366;
-            }
-            
-            .hc-checkbox-group input[type="checkbox"] {
-                width: 20px;
-                height: 20px;
-                cursor: pointer;
-                accent-color: #075E54;
-            }
-
-            .hc-checkbox-group label {
-                margin: 0;
-                cursor: pointer;
-                font-weight: 500;
-            }
-
-            .hc-section-header {
-                font-size: 1.1rem;
+            .diagnosticos-grid th {
+                padding: 1rem;
+                text-align: left;
                 font-weight: 700;
-                color: #075E54;
-                margin: 2rem 0 1rem;
-                padding-bottom: 0.75rem;
-                border-bottom: 3px solid #E8F5E9;
+                font-size: 0.9rem;
+            }
+
+            .diagnosticos-grid tbody tr {
+                border-bottom: 1px solid #E5E7EB;
+                transition: background 0.3s ease;
+            }
+
+            .diagnosticos-grid tbody tr:hover {
+                background: #F9FAFB;
+            }
+
+            .diagnosticos-grid td {
+                padding: 1rem;
+                font-size: 0.9rem;
+            }
+
+            .diagnosticos-grid .delete-btn {
+                background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+                color: white;
+                border: none;
+                padding: 0.5rem 1rem;
+                border-radius: 15px;
+                cursor: pointer;
+                transition: all 0.3s ease;
                 display: flex;
                 align-items: center;
-                gap: 0.75rem;
+                gap: 0.5rem;
+                font-weight: 600;
             }
 
-            .hc-section-header i {
-                font-size: 1.3rem;
+            .diagnosticos-grid .delete-btn:hover {
+                transform: scale(1.05);
+                box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
             }
 
-            .hc-input-icon {
-                position: relative;
-            }
-
-            .hc-input-icon i {
-                position: absolute;
-                left: 1rem;
-                top: 50%;
-                transform: translateY(-50%);
+            .empty-diagnosticos {
+                padding: 2rem;
+                text-align: center;
                 color: #6B7280;
-            }
-
-            .hc-input-icon input {
-                padding-left: 3rem;
-            }
-
-            @media (max-width: 768px) {
-                #historiaClinicaModal {
-                    width: 98%;
-                    max-height: 95vh;
-                }
-
-                .hc-modal-body {
-                    padding: 1rem;
-                }
-
-                .hc-form-row {
-                    grid-template-columns: 1fr;
-                }
-
-                .hc-tabs {
-                    overflow-x: auto;
-                    flex-wrap: nowrap;
-                    -webkit-overflow-scrolling: touch;
-                }
-
-                .hc-tab {
-                    flex-shrink: 0;
-                }
-
-                .hc-modal-footer {
-                    flex-direction: column;
-                }
-
-                .hc-btn {
-                    width: 100%;
-                    justify-content: center;
-                }
+                font-style: italic;
             }
         </style>
     `;
 
-    // Agregar el HTML mejorado del modal
+    // HTML del modal
     const modalHTML = `
         <div class="hc-modal-overlay" id="hcModalOverlay"></div>
+        
         <div id="historiaClinicaModal">
             <div class="hc-modal-header">
-                <h5><i class="fas fa-file-medical"></i> Historia Clínica del Paciente</h5>
+                <h5>
+                    <i class="fas fa-file-medical-alt"></i>
+                    Historia Clínica del Paciente
+                </h5>
                 <button class="hc-close-btn" onclick="cerrarHistoriaClinicaModal()">
                     <i class="fas fa-times"></i>
                 </button>
             </div>
             
             <div class="hc-modal-body">
-                <div class="hc-tabs">
-                    <div class="hc-tab active" data-tab="paciente">
-                        <i class="fas fa-user"></i>
-                        <span>Datos del Paciente</span>
-                    </div>
-                    <div class="hc-tab" data-tab="antecedentes">
-                        <i class="fas fa-history"></i>
-                        <span>Antecedentes</span>
-                    </div>
-                    <div class="hc-tab" data-tab="examen">
-                        <i class="fas fa-stethoscope"></i>
-                        <span>Examen Físico</span>
-                    </div>
-                    <div class="hc-tab" data-tab="diagnostico">
-                        <i class="fas fa-clipboard-check"></i>
-                        <span>Diagnóstico y Plan</span>
-                    </div>
-                </div>
-                
                 <form id="historiaClinicaForm">
-                    <!-- Tab 1: Datos del Paciente -->
+                    <!-- TABS -->
+                    <div class="hc-tabs">
+                        <div class="hc-tab active" data-tab="paciente">
+                            <i class="fas fa-user"></i>
+                            <span>Datos del Paciente</span>
+                        </div>
+                        <div class="hc-tab" data-tab="antecedentes">
+                            <i class="fas fa-history"></i>
+                            <span>Antecedentes</span>
+                        </div>
+                        <div class="hc-tab" data-tab="examen">
+                            <i class="fas fa-heartbeat"></i>
+                            <span>Examen Físico</span>
+                        </div>
+                        <div class="hc-tab" data-tab="diagnostico">
+                            <i class="fas fa-stethoscope"></i>
+                            <span>Diagnóstico y Plan</span>
+                        </div>
+                    </div>
+
+                    <!-- TAB CONTENT: Datos del Paciente -->
                     <div class="hc-tab-content active" data-tab="paciente">
-                        <div class="hc-section-header">
-                            <i class="fas fa-id-card"></i>
+                        <div class="hc-section-title">
+                            <i class="fas fa-address-card"></i>
                             Información Personal
                         </div>
-                        
-                        <div class="hc-form-row">
+
+                        <div class="hc-row">
                             <div class="hc-form-group">
-                                <label><i class="fas fa-fingerprint"></i> No. Identificación <span class="required">*</span></label>
-                                <input type="text" name="noIdentificacion" required placeholder="Ej: 1234567890">
+                                <label>
+                                    <i class="fas fa-id-card"></i>
+                                    Tipo de Identificación <span class="hc-required">*</span>
+                                </label>
+                                <select name="tipoIdentificacion" id="tipoIdentificacion" class="hc-select" required>
+                                    <option value="">Seleccione...</option>
+                                </select>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-user"></i> Nombre Completo <span class="required">*</span></label>
-                                <input type="text" name="nombrePaciente" required placeholder="Nombre completo del paciente">
+                                <label>
+                                    <i class="fas fa-hashtag"></i>
+                                    No. Identificación <span class="hc-required">*</span>
+                                </label>
+                                <input type="text" name="noIdentificacion" class="hc-input" 
+                                       placeholder="Ej: 1234567890" required>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-calendar"></i> Edad <span class="required">*</span></label>
-                                <input type="number" name="edad" required min="0" max="150" placeholder="Edad">
+                                <label>
+                                    <i class="fas fa-user"></i>
+                                    Nombre Completo <span class="hc-required">*</span>
+                                </label>
+                                <input type="text" name="nombrePaciente" class="hc-input" 
+                                       placeholder="Nombre completo del paciente" required>
                             </div>
                         </div>
-                        
-                        <div class="hc-form-row">
+
+                        <div class="hc-row">
                             <div class="hc-form-group">
-                                <label><i class="fas fa-venus-mars"></i> Sexo <span class="required">*</span></label>
-                                <select name="sexo" required>
+                                <label>
+                                    <i class="fas fa-calendar"></i>
+                                    Edad <span class="hc-required">*</span>
+                                </label>
+                                <input type="number" name="edad" class="hc-input" placeholder="Edad" required>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-venus-mars"></i>
+                                    Sexo <span class="hc-required">*</span>
+                                </label>
+                                <select name="sexo" class="hc-select" required>
                                     <option value="">Seleccione...</option>
                                     <option value="M">Masculino</option>
                                     <option value="F">Femenino</option>
-                                    <option value="O">Otro</option>
                                 </select>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-birthday-cake"></i> Fecha de Nacimiento</label>
-                                <input type="date" name="fechaNacimiento">
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-heart"></i> Estado Civil</label>
-                                <select name="estadoCivil">
+                                <label>
+                                    <i class="fas fa-ring"></i>
+                                    Estado Civil
+                                </label>
+                                <select name="estadoCivil" class="hc-select">
                                     <option value="">Seleccione...</option>
-                                    <option value="Soltero">Soltero(a)</option>
-                                    <option value="Casado">Casado(a)</option>
-                                    <option value="Viudo">Viudo(a)</option>
-                                    <option value="Divorciado">Divorciado(a)</option>
-                                    <option value="Union Libre">Unión Libre</option>
+                                    <option value="SOLTERO">Soltero(a)</option>
+                                    <option value="CASADO">Casado(a)</option>
+                                    <option value="UNION_LIBRE">Unión Libre</option>
+                                    <option value="DIVORCIADO">Divorciado(a)</option>
+                                    <option value="VIUDO">Viudo(a)</option>
                                 </select>
                             </div>
                         </div>
-                        
-                        <div class="hc-section-header">
+
+                        <div class="hc-section-title">
                             <i class="fas fa-map-marker-alt"></i>
                             Información de Contacto
                         </div>
-                        
-                        <div class="hc-form-row">
+
+                        <div class="hc-row">
                             <div class="hc-form-group">
-                                <label><i class="fas fa-phone"></i> Teléfono <span class="required">*</span></label>
-                                <input type="tel" name="telefono" required placeholder="Número de teléfono">
+                                <label>
+                                    <i class="fas fa-phone"></i>
+                                    Teléfono <span class="hc-required">*</span>
+                                </label>
+                                <input type="tel" name="telefono" class="hc-input" 
+                                       placeholder="Número de teléfono" required>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-home"></i> Dirección</label>
-                                <input type="text" name="direccion" placeholder="Dirección completa">
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-city"></i> Ciudad</label>
-                                <input type="text" name="ciudad" placeholder="Ciudad">
-                            </div>
-                        </div>
-                        
-                        <div class="hc-form-row">
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-briefcase"></i> Ocupación</label>
-                                <input type="text" name="ocupacion" placeholder="Ocupación">
+                                <label>
+                                    <i class="fas fa-home"></i>
+                                    Dirección
+                                </label>
+                                <input type="text" name="direccion" class="hc-input" 
+                                       placeholder="Dirección completa">
                             </div>
                         </div>
-                        
-                        <div class="hc-section-header">
-                            <i class="fas fa-notes-medical"></i>
-                            Motivo de Consulta
-                        </div>
-                        
-                        <div class="hc-form-group">
-                            <label><i class="fas fa-comment-medical"></i> Motivo de Consulta <span class="required">*</span></label>
-                            <textarea name="motivoConsulta" rows="3" required placeholder="Describa el motivo de la consulta..."></textarea>
-                        </div>
-                        
-                        <div class="hc-form-group">
-                            <label><i class="fas fa-clipboard-list"></i> Enfermedad Actual <span class="required">*</span></label>
-                            <textarea name="enfermedadActual" rows="4" required placeholder="Describa la enfermedad actual..."></textarea>
+
+                        <div class="hc-row">
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-map"></i>
+                                    Departamento
+                                </label>
+                                <select name="departamento" id="departamento" class="hc-select">
+                                    <option value="">Seleccione...</option>
+                                </select>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-city"></i>
+                                    Ciudad
+                                </label>
+                                <input type="text" name="ciudad" class="hc-input" placeholder="Ciudad">
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-briefcase"></i>
+                                    Ocupación
+                                </label>
+                                <input type="text" name="ocupacion" class="hc-input" placeholder="Ocupación">
+                            </div>
                         </div>
                     </div>
-                    
-                    <!-- Tab 2: Antecedentes -->
+
+                    <!-- TAB CONTENT: Antecedentes -->
                     <div class="hc-tab-content" data-tab="antecedentes">
-                        <div class="hc-section-header">
+                        <div class="hc-section-title">
+                            <i class="fas fa-notes-medical"></i>
+                            Motivo de Consulta y Enfermedad Actual
+                        </div>
+
+                        <div class="hc-form-group">
+                            <label>
+                                <i class="fas fa-comment-medical"></i>
+                                Motivo de Consulta <span class="hc-required">*</span>
+                            </label>
+                            <textarea name="motivoConsulta" class="hc-textarea" 
+                                      placeholder="Describa el motivo de la consulta" required></textarea>
+                        </div>
+
+                        <div class="hc-form-group">
+                            <label>
+                                <i class="fas fa-file-medical"></i>
+                                Enfermedad Actual
+                            </label>
+                            <textarea name="enfermedadActual" class="hc-textarea" 
+                                      placeholder="Describa la enfermedad actual"></textarea>
+                        </div>
+
+                        <div class="hc-section-title">
                             <i class="fas fa-history"></i>
                             Antecedentes Médicos
                         </div>
-                        
-                        <div class="hc-antecedentes-grid">
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="hipertension" name="antecedentes" value="HIPERTENSION">
-                                <label for="hipertension">Hipertensión</label>
+
+                        <div class="hc-checkbox-group">
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_hipertension" name="antecedentes" value="HIPERTENSION">
+                                <label for="ant_hipertension">Hipertensión</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="diabetes" name="antecedentes" value="DIABETES">
-                                <label for="diabetes">Diabetes</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_diabetes" name="antecedentes" value="DIABETES">
+                                <label for="ant_diabetes">Diabetes</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="asma" name="antecedentes" value="ASMA">
-                                <label for="asma">Asma</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_asma" name="antecedentes" value="ASMA">
+                                <label for="ant_asma">Asma</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="cancer" name="antecedentes" value="CANCER">
-                                <label for="cancer">Cáncer</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_epilepsia" name="antecedentes" value="EPILEPSIA">
+                                <label for="ant_epilepsia">Epilepsia</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="cardiopatia" name="antecedentes" value="CARDIOPATIA">
-                                <label for="cardiopatia">Cardiopatía</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_cardiopatia" name="antecedentes" value="CARDIOPATIA">
+                                <label for="ant_cardiopatia">Cardiopatía</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="epilepsia" name="antecedentes" value="EPILEPSIA">
-                                <label for="epilepsia">Epilepsia</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_cancer" name="antecedentes" value="CANCER">
+                                <label for="ant_cancer">Cáncer</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="tuberculosis" name="antecedentes" value="TUBERCULOSIS">
-                                <label for="tuberculosis">Tuberculosis</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_alergias" name="antecedentes" value="ALERGIAS">
+                                <label for="ant_alergias">Alergias</label>
                             </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="hepatitis" name="antecedentes" value="HEPATITIS">
-                                <label for="hepatitis">Hepatitis</label>
-                            </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="cirugias" name="antecedentes" value="CIRUGIAS">
-                                <label for="cirugias">Cirugías Previas</label>
-                            </div>
-                            <div class="hc-checkbox-group">
-                                <input type="checkbox" id="alergias" name="antecedentes" value="ALERGIAS">
-                                <label for="alergias">Alergias</label>
+                            <div class="hc-checkbox-item">
+                                <input type="checkbox" id="ant_cirugias" name="antecedentes" value="CIRUGIAS_PREVIAS">
+                                <label for="ant_cirugias">Cirugías Previas</label>
                             </div>
                         </div>
-                        
-                        <div class="hc-form-group" style="margin-top: 2rem;">
-                            <label><i class="fas fa-plus-circle"></i> Otros Antecedentes</label>
-                            <textarea name="otrosAntecedentes" rows="4" placeholder="Describa otros antecedentes relevantes..."></textarea>
+
+                        <div class="hc-form-group">
+                            <label>
+                                <i class="fas fa-plus-square"></i>
+                                Otros Antecedentes
+                            </label>
+                            <textarea name="otrosAntecedentes" class="hc-textarea" 
+                                      placeholder="Especifique otros antecedentes relevantes"></textarea>
                         </div>
                     </div>
-                    
-                    <!-- Tab 3: Examen Físico -->
+
+                    <!-- TAB CONTENT: Examen Físico -->
                     <div class="hc-tab-content" data-tab="examen">
-                        <div class="hc-section-header">
-                            <i class="fas fa-heartbeat"></i>
+                        <div class="hc-section-title">
+                            <i class="fas fa-thermometer-half"></i>
                             Signos Vitales
                         </div>
-                        
-                        <div class="hc-form-row">
+
+                        <div class="hc-row">
                             <div class="hc-form-group">
-                                <label><i class="fas fa-heart"></i> FC (Frec. Cardíaca)</label>
-                                <input type="number" name="fc" placeholder="lpm">
+                                <label>
+                                    <i class="fas fa-heartbeat"></i>
+                                    FC (lpm)
+                                </label>
+                                <input type="number" name="fc" class="hc-input" placeholder="Frecuencia cardíaca">
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-lungs"></i> FR (Frec. Respiratoria)</label>
-                                <input type="number" name="fr" placeholder="rpm">
+                                <label>
+                                    <i class="fas fa-lungs"></i>
+                                    FR (rpm)
+                                </label>
+                                <input type="number" name="fr" class="hc-input" placeholder="Frecuencia respiratoria">
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-tachometer-alt"></i> TA (Tensión Arterial)</label>
-                                <input type="text" name="ta" placeholder="120/80 mmHg">
-                            </div>
-                        </div>
-                        
-                        <div class="hc-form-row">
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-thermometer-half"></i> Temperatura</label>
-                                <input type="number" step="0.1" name="temperatura" placeholder="°C">
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-weight"></i> Peso</label>
-                                <input type="number" step="0.1" name="peso" placeholder="kg">
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-ruler-vertical"></i> Talla</label>
-                                <input type="number" step="0.01" name="talla" placeholder="cm">
+                                <label>
+                                    <i class="fas fa-tachometer-alt"></i>
+                                    TA (mmHg)
+                                </label>
+                                <input type="text" name="ta" class="hc-input" placeholder="Ej: 120/80">
                             </div>
                         </div>
-                        
-                        <div class="hc-form-group">
-                            <label><i class="fas fa-brain"></i> Glasgow</label>
-                            <input type="text" name="glasgow" placeholder="Escala de Glasgow">
+
+                        <div class="hc-row">
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-thermometer"></i>
+                                    Temperatura (°C)
+                                </label>
+                                <input type="number" step="0.1" name="temperatura" class="hc-input" placeholder="Ej: 36.5">
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-weight"></i>
+                                    Peso (kg)
+                                </label>
+                                <input type="number" step="0.1" name="peso" class="hc-input" placeholder="Peso en kg">
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-ruler-vertical"></i>
+                                    Talla (cm)
+                                </label>
+                                <input type="number" step="0.1" name="talla" class="hc-input" placeholder="Talla en cm">
+                            </div>
                         </div>
-                        
-                        <div class="hc-section-header">
+
+                        <div class="hc-section-title">
                             <i class="fas fa-user-md"></i>
-                            Examen por Sistemas
+                            Examen Físico Detallado
                         </div>
-                        
+
                         <div class="hc-form-group">
-                            <label><i class="fas fa-user-check"></i> Aspecto General</label>
-                            <textarea name="aspectoGeneral" rows="3" placeholder="Describa el aspecto general..."></textarea>
+                            <label>
+                                <i class="fas fa-brain"></i>
+                                Escala de Glasgow
+                            </label>
+                            <input type="text" name="glasgow" class="hc-input" placeholder="Ej: 15/15">
                         </div>
-                        
-                        <div class="hc-form-row">
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-head-side-virus"></i> Cabeza y Cara</label>
-                                <textarea name="cabezaCara" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-neck"></i> Cuello</label>
-                                <textarea name="cuello" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="hc-form-row">
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-lungs"></i> Tórax</label>
-                                <textarea name="torax" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-stomach"></i> Abdomen</label>
-                                <textarea name="abdomen" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                        </div>
-                        
-                        <div class="hc-form-row">
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-venus"></i> Genitourinario</label>
-                                <textarea name="genitourinario" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                            <div class="hc-form-group">
-                                <label><i class="fas fa-walking"></i> Dorso y Extremidades</label>
-                                <textarea name="dorsoExtremidades" rows="3" placeholder="Hallazgos..."></textarea>
-                            </div>
-                        </div>
-                        
+
                         <div class="hc-form-group">
-                            <label><i class="fas fa-brain"></i> Sistema Nervioso Central</label>
-                            <textarea name="snc" rows="3" placeholder="Hallazgos neurológicos..."></textarea>
+                            <label>
+                                <i class="fas fa-male"></i>
+                                Aspecto General
+                            </label>
+                            <textarea name="aspectoGeneral" class="hc-textarea" 
+                                      placeholder="Describa el aspecto general del paciente"></textarea>
+                        </div>
+
+                        <div class="hc-row">
+                            <div class="hc-form-group">
+                                <label>Cabeza y Cara</label>
+                                <textarea name="cabezaCara" class="hc-textarea" 
+                                          placeholder="Hallazgos en cabeza y cara"></textarea>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>Cuello</label>
+                                <textarea name="cuello" class="hc-textarea" 
+                                          placeholder="Hallazgos en cuello"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="hc-row">
+                            <div class="hc-form-group">
+                                <label>Tórax</label>
+                                <textarea name="torax" class="hc-textarea" 
+                                          placeholder="Hallazgos en tórax"></textarea>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>Abdomen</label>
+                                <textarea name="abdomen" class="hc-textarea" 
+                                          placeholder="Hallazgos en abdomen"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="hc-row">
+                            <div class="hc-form-group">
+                                <label>Genitourinario</label>
+                                <textarea name="genitourinario" class="hc-textarea" 
+                                          placeholder="Hallazgos genitourinarios"></textarea>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>Dorso y Extremidades</label>
+                                <textarea name="dorsoExtremidades" class="hc-textarea" 
+                                          placeholder="Hallazgos en dorso y extremidades"></textarea>
+                            </div>
+                        </div>
+
+                        <div class="hc-form-group">
+                            <label>
+                                <i class="fas fa-brain"></i>
+                                Sistema Nervioso Central
+                            </label>
+                            <textarea name="snc" class="hc-textarea" 
+                                      placeholder="Hallazgos del sistema nervioso central"></textarea>
                         </div>
                     </div>
-                    
-                    <!-- Tab 4: Diagnóstico y Plan -->
+
+                    <!-- TAB CONTENT: Diagnóstico y Plan -->
                     <div class="hc-tab-content" data-tab="diagnostico">
-                        <div class="hc-section-header">
-                            <i class="fas fa-diagnoses"></i>
-                            Diagnóstico
+                        <div class="hc-section-title">
+                            <i class="fas fa-stethoscope"></i>
+                            Diagnósticos
                         </div>
-                        
+
+                        <div class="diagnostico-form-container">
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-code"></i>
+                                    Código Diagnóstico (CIE-10) <span class="hc-required">*</span>
+                                </label>
+                                <input type="text" id="codigoDiagnostico" class="hc-input" 
+                                       list="diagnosticosList" placeholder="Buscar diagnóstico por código...">
+                                <datalist id="diagnosticosList"></datalist>
+                                <p class="hc-help-text">Escriba para buscar diagnósticos por código o descripción</p>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-file-medical-alt"></i>
+                                    Descripción
+                                </label>
+                                <input type="text" id="descripcionDiagnostico" class="hc-input" 
+                                       placeholder="Descripción del diagnóstico" readonly>
+                            </div>
+
+                            <div class="hc-form-group">
+                                <label>
+                                    <i class="fas fa-comment"></i>
+                                    Observación
+                                </label>
+                                <textarea id="observacionDiagnostico" class="hc-textarea" 
+                                          placeholder="Observaciones adicionales sobre el diagnóstico"></textarea>
+                            </div>
+
+                            <button type="button" class="diagnostico-add-btn" onclick="agregarDiagnostico()">
+                                <i class="fas fa-plus-circle"></i>
+                                Agregar Diagnóstico
+                            </button>
+                        </div>
+
+                        <div class="diagnosticos-grid" id="diagnosticosGrid">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>Código</th>
+                                        <th>Descripción</th>
+                                        <th>Observación</th>
+                                        <th>Acción</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="diagnosticosTableBody">
+                                    <tr>
+                                        <td colspan="4" class="empty-diagnosticos">
+                                            No hay diagnósticos agregados
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="hc-section-title">
+                            <i class="fas fa-clipboard-list"></i>
+                            Plan de Tratamiento
+                        </div>
+
                         <div class="hc-form-group">
-                            <label><i class="fas fa-list-ol"></i> Diagnósticos (uno por línea) <span class="required">*</span></label>
-                            <textarea name="diagnosticos" rows="5" required placeholder="Ingrese cada diagnóstico en una línea separada&#10;Ejemplo:&#10;1. Hipertensión arterial esencial (I10)&#10;2. Diabetes mellitus tipo 2 (E11)"></textarea>
+                            <label>
+                                <i class="fas fa-notes-medical"></i>
+                                Evolución
+                            </label>
+                            <textarea name="evolucion" class="hc-textarea" 
+                                      placeholder="Describa la evolución del paciente"></textarea>
                         </div>
-                        
+
                         <div class="hc-form-group">
-                            <label><i class="fas fa-notes-medical"></i> Evolución y Observaciones</label>
-                            <textarea name="evolucion" rows="4" placeholder="Describa la evolución del paciente..."></textarea>
+                            <label>
+                                <i class="fas fa-tasks"></i>
+                                Plan de Tratamiento (uno por línea)
+                            </label>
+                            <textarea name="plan" class="hc-textarea" 
+                                      placeholder="Ejemplo:
+1. Paracetamol 500mg cada 8 horas por 3 días
+2. Control en 7 días
+3. Exámenes de laboratorio"></textarea>
+                            <p class="hc-help-text">Ingrese cada ítem del plan en una línea separada</p>
                         </div>
-                        
-                        <div class="hc-form-group">
-                            <label><i class="fas fa-tasks"></i> Plan de Tratamiento (uno por línea)</label>
-                            <textarea name="plan" rows="5" placeholder="Ingrese cada ítem del plan en una línea separada&#10;Ejemplo:&#10;1. Control de signos vitales cada 8 horas&#10;2. Dieta hiposódica&#10;3. Losartán 50mg VO cada 12 horas"></textarea>
-                        </div>
-                        
-                        <div class="hc-section-header">
+
+                        <div class="hc-section-title">
                             <i class="fas fa-user-md"></i>
-                            Datos del Médico Tratante
+                            Información del Médico
                         </div>
-                        
-                        <div class="hc-form-row">
+
+                        <div class="hc-row">
                             <div class="hc-form-group">
-                                <label><i class="fas fa-user-md"></i> Nombre del Médico <span class="required">*</span></label>
-                                <input type="text" name="medicoNombre" required placeholder="Nombre completo del médico">
+                                <label>
+                                    <i class="fas fa-user-md"></i>
+                                    Nombre del Médico <span class="hc-required">*</span>
+                                </label>
+                                <input type="text" name="medicoNombre" class="hc-input" 
+                                       placeholder="Nombre completo del médico" required>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-id-card-alt"></i> Registro Médico <span class="required">*</span></label>
-                                <input type="text" name="medicoRegistro" required placeholder="Número de registro">
+                                <label>
+                                    <i class="fas fa-id-card"></i>
+                                    Registro Médico <span class="hc-required">*</span>
+                                </label>
+                                <input type="text" name="medicoRegistro" class="hc-input" 
+                                       placeholder="Número de registro médico" required>
                             </div>
+
                             <div class="hc-form-group">
-                                <label><i class="fas fa-certificate"></i> Especialidad</label>
-                                <input type="text" name="medicoEspecialidad" placeholder="Especialidad médica">
+                                <label>
+                                    <i class="fas fa-graduation-cap"></i>
+                                    Especialidad
+                                </label>
+                                <input type="text" name="medicoEspecialidad" class="hc-input" 
+                                       placeholder="Especialidad médica">
                             </div>
                         </div>
                     </div>
                 </form>
             </div>
-            
+
             <div class="hc-modal-footer">
                 <button type="button" class="hc-btn hc-btn-secondary" onclick="cerrarHistoriaClinicaModal()">
                     <i class="fas fa-times"></i>
@@ -811,6 +1110,9 @@
     document.head.insertAdjacentHTML('beforeend', styles);
     document.body.insertAdjacentHTML('beforeend', modalHTML);
 
+    // Cargar datos de listas al iniciar
+    cargarDatosListas();
+
     // Funcionalidad de tabs
     document.querySelectorAll('.hc-tab').forEach(tab => {
         tab.addEventListener('click', function() {
@@ -825,6 +1127,69 @@
             document.querySelector(`.hc-tab-content[data-tab="${tabName}"]`).classList.add('active');
         });
     });
+
+    // Función para agregar diagnóstico al grid
+    window.agregarDiagnostico = function() {
+        const codigo = document.getElementById('codigoDiagnostico').value.trim();
+        const descripcion = document.getElementById('descripcionDiagnostico').value.trim();
+        const observacion = document.getElementById('observacionDiagnostico').value.trim();
+
+        if (!codigo || !descripcion) {
+            alert('Por favor seleccione un diagnóstico válido');
+            return;
+        }
+
+        // Agregar al array
+        diagnosticosAgregados.push({
+            codigo: codigo,
+            descripcion: descripcion,
+            observacion: observacion
+        });
+
+        // Actualizar grid
+        actualizarGridDiagnosticos();
+
+        // Limpiar campos
+        document.getElementById('codigoDiagnostico').value = '';
+        document.getElementById('descripcionDiagnostico').value = '';
+        document.getElementById('observacionDiagnostico').value = '';
+    };
+
+    function actualizarGridDiagnosticos() {
+        const tbody = document.getElementById('diagnosticosTableBody');
+        
+        if (diagnosticosAgregados.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" class="empty-diagnosticos">
+                        No hay diagnósticos agregados
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        tbody.innerHTML = diagnosticosAgregados.map((diag, index) => `
+            <tr>
+                <td><strong>${diag.codigo}</strong></td>
+                <td>${diag.descripcion}</td>
+                <td>${diag.observacion || '-'}</td>
+                <td>
+                    <button type="button" class="delete-btn" onclick="eliminarDiagnostico(${index})">
+                        <i class="fas fa-trash"></i>
+                        Eliminar
+                    </button>
+                </td>
+            </tr>
+        `).join('');
+    }
+
+    window.eliminarDiagnostico = function(index) {
+        if (confirm('¿Está seguro de eliminar este diagnóstico?')) {
+            diagnosticosAgregados.splice(index, 1);
+            actualizarGridDiagnosticos();
+        }
+    };
 
     // Función global para abrir el modal
     window.abrirHistoriaClinicaModal = function(conversationId) {
@@ -852,6 +1217,10 @@
         
         modal.classList.remove('show');
         overlay.classList.remove('show');
+
+        // Limpiar diagnósticos agregados
+        diagnosticosAgregados = [];
+        actualizarGridDiagnosticos();
     };
 
     // Función global para guardar la historia clínica
@@ -873,14 +1242,17 @@
                 field.style.boxShadow = '';
             }
         });
+
+        // Validar que haya al menos un diagnóstico
+        if (diagnosticosAgregados.length === 0) {
+            alert('Debe agregar al menos un diagnóstico');
+            // Cambiar a la pestaña de diagnóstico
+            document.querySelector('.hc-tab[data-tab="diagnostico"]').click();
+            return;
+        }
         
         if (!isValid) {
-            // Mostrar toast de error
-            if (typeof showToast === 'function') {
-                showToast('Por favor complete todos los campos obligatorios (marcados con *)', 'error');
-            } else {
-                alert('Por favor complete todos los campos obligatorios (marcados con *)');
-            }
+            alert('Por favor complete todos los campos obligatorios (marcados con *)');
             return;
         }
         
@@ -896,12 +1268,6 @@
             antecedentes['OTROS'] = otrosAntecedentes;
         }
         
-        // Construir diagnósticos (separados por línea)
-        const diagnosticos = formData.get('diagnosticos')
-            .split('\n')
-            .filter(d => d.trim())
-            .map(d => d.trim());
-        
         // Construir plan (separados por línea)
         const plan = formData.get('plan')
             .split('\n')
@@ -909,11 +1275,13 @@
             .map(p => p.trim());
         
         const historiaClinica = {
+            tipoIdentificacion: formData.get('tipoIdentificacion'),
             noIdentificacion: formData.get('noIdentificacion'),
             nombrePaciente: formData.get('nombrePaciente'),
             edad: parseInt(formData.get('edad')),
             sexo: formData.get('sexo'),
             direccion: formData.get('direccion') || '',
+            departamento: formData.get('departamento') || '',
             ciudad: formData.get('ciudad') || '',
             telefono: formData.get('telefono'),
             ocupacion: formData.get('ocupacion') || '',
@@ -945,7 +1313,11 @@
                 snc: formData.get('snc') || '',
                 valor: ''
             },
-            diagnosticos: diagnosticos,
+            diagnosticos: diagnosticosAgregados.map(d => ({
+                codigo: d.codigo,
+                descripcion: d.descripcion,
+                observacion: d.observacion
+            })),
             evolucion: formData.get('evolucion') || '',
             plan: plan,
             medicoNombre: formData.get('medicoNombre'),
@@ -971,30 +1343,20 @@
             const result = await response.json();
             
             if (result.success) {
-                if (typeof showToast === 'function') {
-                    showToast(`Historia Clínica creada exitosamente! Número: ${result.data.noHistoria}`, 'success');
-                } else {
-                    alert(`✅ Historia Clínica creada exitosamente!\nNúmero: ${result.data.noHistoria}\nEl PDF ha sido enviado al paciente por WhatsApp.`);
-                }
+                alert(`✅ Historia Clínica creada exitosamente!\nNúmero: ${result.data.noHistoria}\nEl PDF ha sido enviado al paciente por WhatsApp.`);
                 cerrarHistoriaClinicaModal();
                 form.reset();
+                diagnosticosAgregados = [];
+                actualizarGridDiagnosticos();
             } else {
-                if (typeof showToast === 'function') {
-                    showToast('Error al crear la historia clínica: ' + result.message, 'error');
-                } else {
-                    alert('❌ Error al crear la historia clínica: ' + result.message);
-                }
+                alert('❌ Error al crear la historia clínica: ' + result.message);
             }
             
             saveBtn.innerHTML = originalText;
             saveBtn.disabled = false;
         } catch (error) {
             console.error('Error:', error);
-            if (typeof showToast === 'function') {
-                showToast('Error al guardar la historia clínica. Por favor intente nuevamente.', 'error');
-            } else {
-                alert('❌ Error al guardar la historia clínica. Por favor intente nuevamente.');
-            }
+            alert('❌ Error al guardar la historia clínica. Por favor intente nuevamente.');
             event.target.innerHTML = originalText;
             event.target.disabled = false;
         }

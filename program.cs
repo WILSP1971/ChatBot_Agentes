@@ -855,10 +855,10 @@ public class AIBotService
         {
             var welcomeMsg = "¡Hola! 👋 Bienvenido a nuestro servicio de salud.\n\n" +
                         "Por favor selecciona una opción:\n" +
-                        "1️⃣ 📹 Agendar VideoLlamada\n" +
-                        "2️⃣ 📋 Registrar Historia Clínica\n" +
-                        "3️⃣ 📅 Consultar Citas Programadas\n" +
-                        "4️⃣ 👤 Hablar con un Agente\n\n" +
+                        "1️⃣ 📅 Consultar Citas Programadas\n" +
+                        "2️⃣ 👤 Hablar con un Agente\n\n" +
+                        // "3️⃣ 📅 Consultar Citas Programadas\n" +
+                        // "4️⃣ 👤 Hablar con un Agente\n\n" +
                         "Escribe el número de tu opción (1, 2, 3 o 4)";
             
             conversation.Context["esperando_opcion"] = "menu_principal";
@@ -887,7 +887,7 @@ public class AIBotService
         
         switch (option)
         {
-            case "1":
+            case "3":
                 response = "📹 *VideoLlamada*\n\n" +
                         "Para agendar una videollamada, necesito validar tus datos.\n" +
                         "Por favor ingresa tu número de documento:";
@@ -895,7 +895,7 @@ public class AIBotService
                 conversation.Context.Remove("esperando_opcion");
                 break;
 
-            case "2":
+            case "4":
                 response = "📋 *Registro de Historia Clínica*\n\n" +
                         "Vamos a registrar tus datos.\n" +
                         "Por favor ingresa tu número de documento:";
@@ -903,14 +903,14 @@ public class AIBotService
                 conversation.Context.Remove("esperando_opcion");
                 break;
 
-            case "3":
+            case "1":
                 response = "📅 *Consulta de Citas*\n\n" +
                         "Por favor ingresa tu número de documento para consultar tus citas:";
                 conversation.Context["solicitando_documento"] = "consultar_citas";
                 conversation.Context.Remove("esperando_opcion");
                 break;
 
-            case "4":
+            case "2":
                 response = "👤 Te estoy conectando con un agente...";
                 await _whatsAppService.SendMessage(phoneNumber, response);
                 conversation.Context.Clear();

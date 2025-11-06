@@ -6,8 +6,7 @@
     <title>Panel de Operadores - WhatsApp Chatbot</title>
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
     
     <style>
         :root {
@@ -22,13 +21,6 @@
             --text-primary: #1F2937;
             --text-secondary: #6B7280;
             --border: #E5E7EB;
-            --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            --gradient-green: linear-gradient(135deg, var(--dark-green) 0%, #128C7E 100%);
-            --gradient-success: linear-gradient(135deg, #34d399 0%, #10b981 100%);
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
-            --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.12);
-            --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.15);
-            --shadow-xl: 0 20px 60px rgba(0, 0, 0, 0.2);
         }
 
         * {
@@ -38,50 +30,18 @@
         }
 
         body {
-            background: var(--gradient-primary);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
             height: 100vh;
             overflow: hidden;
         }
 
-        /* ===== ANIMACIONES GLOBALES ===== */
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(-20px); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(0.95); }
-        }
-
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-5px); }
-        }
-
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -1000px 0; }
-            100% { background-position: 1000px 0; }
-        }
-
-        /* ===== NAVBAR MEJORADO ===== */
+        /* ===== NAVBAR ===== */
         .navbar {
-            background: var(--gradient-green);
+            background: linear-gradient(135deg, var(--dark-green) 0%, #128C7E 100%);
             backdrop-filter: blur(10px);
-            box-shadow: var(--shadow-lg);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
             padding: 1rem 2rem;
-            border-bottom: 3px solid rgba(255, 255, 255, 0.1);
         }
 
         .navbar-brand {
@@ -90,48 +50,44 @@
             color: white !important;
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            animation: fadeIn 0.6s ease;
-        }
-
-        .navbar-brand i {
-            font-size: 2rem;
-            animation: bounce 2s infinite;
+            gap: 0.5rem;
         }
 
         .status-badge {
-            padding: 0.5rem 1.25rem;
+            padding: 0.4rem 1rem;
             border-radius: 50px;
-            font-size: 0.8rem;
+            font-size: 0.75rem;
             font-weight: 600;
             transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            gap: 0.5rem;
-            box-shadow: var(--shadow-sm);
-            animation: fadeIn 0.8s ease;
+            gap: 0.4rem;
         }
 
         .status-badge::before {
             content: '';
-            width: 10px;
-            height: 10px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background: currentColor;
             animation: pulse 2s infinite;
-            box-shadow: 0 0 10px currentColor;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(0.9); }
         }
 
         .status-online {
             background: rgba(76, 175, 80, 0.2);
             color: #4CAF50;
-            border: 2px solid rgba(76, 175, 80, 0.4);
+            border: 1px solid rgba(76, 175, 80, 0.3);
         }
 
         .status-offline {
             background: rgba(158, 158, 158, 0.2);
             color: #9E9E9E;
-            border: 2px solid rgba(158, 158, 158, 0.4);
+            border: 1px solid rgba(158, 158, 158, 0.3);
         }
 
         /* ===== MAIN CONTAINER ===== */
@@ -144,438 +100,269 @@
             margin: 0 auto;
         }
 
-        /* ===== SIDEBAR MEJORADO ===== */
+        /* ===== SIDEBAR ===== */
         .sidebar {
-            width: 400px;
+            width: 380px;
             background: white;
             border-radius: 20px 0 0 20px;
-            box-shadow: var(--shadow-xl);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: slideIn 0.5s ease;
         }
 
         .sidebar-header {
-            padding: 1.75rem;
-            background: var(--gradient-green);
+            padding: 1.5rem;
+            background: linear-gradient(135deg, var(--primary-green) 0%, #128C7E 100%);
             color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .sidebar-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shimmer 3s infinite;
         }
 
         .sidebar-header h6 {
             margin: 0;
-            font-size: 1.2rem;
-            font-weight: 700;
+            font-size: 1.1rem;
+            font-weight: 600;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: relative;
-            z-index: 1;
-        }
-
-        .sidebar-header i {
-            font-size: 1.5rem;
-            animation: bounce 2s infinite;
         }
 
         .waiting-badge {
             background: rgba(255, 255, 255, 0.3);
-            padding: 0.4rem 1rem;
+            padding: 0.3rem 0.8rem;
             border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 700;
-            animation: pulse 2s infinite;
-            box-shadow: var(--shadow-sm);
+            font-size: 0.85rem;
+            animation: pulse-waiting 2s infinite;
+        }
+
+        @keyframes pulse-waiting {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.9; }
         }
 
         .conversations-list {
             flex: 1;
             overflow-y: auto;
-            padding: 0.75rem;
+            padding: 0.5rem;
         }
 
         .conversations-list::-webkit-scrollbar {
-            width: 8px;
-        }
-
-        .conversations-list::-webkit-scrollbar-track {
-            background: #F5F5F5;
-            border-radius: 10px;
+            width: 6px;
         }
 
         .conversations-list::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--primary-green), var(--dark-green));
+            background: #DDD;
             border-radius: 10px;
-            transition: all 0.3s;
-        }
-
-        .conversations-list::-webkit-scrollbar-thumb:hover {
-            background: var(--dark-green);
         }
 
         .conversation-item {
-            padding: 1.25rem;
-            margin-bottom: 0.75rem;
-            border-radius: 15px;
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 12px;
             cursor: pointer;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border: 2px solid transparent;
-            background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .conversation-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: -100%;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(90deg, transparent, rgba(37, 211, 102, 0.1), transparent);
-            transition: left 0.5s;
-        }
-
-        .conversation-item:hover::before {
-            left: 100%;
+            background: #FAFAFA;
         }
 
         .conversation-item:hover {
             background: var(--light-green);
-            transform: translateX(8px) scale(1.02);
-            box-shadow: var(--shadow-md);
-            border-color: var(--primary-green);
+            transform: translateX(5px);
+            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.15);
         }
 
         .conversation-item.active {
-            background: linear-gradient(135deg, rgba(37, 211, 102, 0.15) 0%, rgba(18, 140, 126, 0.15) 100%);
-            border-left: 5px solid var(--primary-green);
-            box-shadow: var(--shadow-md);
-            transform: translateX(5px);
+            background: linear-gradient(135deg, rgba(37, 211, 102, 0.1) 0%, rgba(18, 140, 126, 0.1) 100%);
+            border-left: 4px solid var(--primary-green);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.2);
         }
 
         .conversation-item.waiting {
             background: linear-gradient(135deg, #FFF9C4 0%, #FFF59D 100%);
-            border-left: 5px solid #FFC107;
+            border-left: 4px solid #FFC107;
             animation: gentle-pulse 3s infinite;
         }
 
         @keyframes gentle-pulse {
-            0%, 100% { 
-                box-shadow: 0 4px 16px rgba(255, 193, 7, 0.4);
-                transform: scale(1);
-            }
-            50% { 
-                box-shadow: 0 8px 24px rgba(255, 193, 7, 0.6);
-                transform: scale(1.02);
-            }
+            0%, 100% { box-shadow: 0 4px 12px rgba(255, 193, 7, 0.3); }
+            50% { box-shadow: 0 6px 20px rgba(255, 193, 7, 0.5); }
         }
 
         .conversation-name {
-            font-weight: 700;
+            font-weight: 600;
             color: var(--text-primary);
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.3rem;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            font-size: 1.05rem;
-        }
-
-        .conversation-name i {
-            color: var(--primary-green);
         }
 
         .conversation-phone {
             font-size: 0.85rem;
             color: var(--text-secondary);
             margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
         }
 
         .conversation-preview {
-            font-size: 0.875rem;
+            font-size: 0.85rem;
             color: var(--text-secondary);
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
-            font-style: italic;
         }
 
         .conversation-time {
             font-size: 0.75rem;
             color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
         }
 
-        /* ===== CHAT AREA MEJORADO ===== */
+        /* ===== CHAT AREA ===== */
         .chat-area {
             flex: 1;
             background: white;
             border-radius: 0 20px 20px 0;
-            box-shadow: var(--shadow-xl);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
             display: flex;
             flex-direction: column;
             overflow: hidden;
-            animation: fadeIn 0.6s ease;
         }
 
         .chat-header {
-            padding: 1.75rem 2rem;
-            background: var(--gradient-green);
-            color: white;
+            padding: 1.5rem 2rem;
+            background: linear-gradient(135deg, #FAFAFA 0%, #F5F5F5 100%);
+            border-bottom: 1px solid var(--border);
             display: flex;
             justify-content: space-between;
             align-items: center;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
         }
 
-        .chat-header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
-            animation: shimmer 4s infinite;
-        }
-
-        .chat-header-info {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            position: relative;
-            z-index: 1;
-        }
-
-        .customer-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-            animation: bounce 3s infinite;
-        }
-
-        .customer-details h5 {
+        .chat-header-info h6 {
             margin: 0;
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .customer-details p {
-            margin: 0;
-            font-size: 0.9rem;
-            opacity: 0.95;
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-primary);
             display: flex;
             align-items: center;
-            gap: 0.3rem;
+            gap: 0.5rem;
+        }
+
+        .chat-header-info small {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
         }
 
         .chat-actions {
             display: flex;
-            gap: 0.75rem;
-            position: relative;
-            z-index: 1;
+            gap: 0.5rem;
         }
 
-        /* ===== BOTONES MEJORADOS CON ICONOS ANIMADOS ===== */
-        .action-btn {
-            padding: 0.75rem 1.25rem;
-            border: none;
+        .btn-modern {
+            padding: 0.5rem 1.2rem;
             border-radius: 12px;
-            font-weight: 600;
-            cursor: pointer;
+            border: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
+            cursor: pointer;
         }
 
-        .action-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.3);
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
-        }
-
-        .action-btn:hover::before {
-            width: 300px;
-            height: 300px;
-        }
-
-        .action-btn i {
-            font-size: 1.1rem;
-            transition: transform 0.3s;
-            position: relative;
-            z-index: 1;
-        }
-
-        .action-btn span {
-            position: relative;
-            z-index: 1;
-        }
-
-        .action-btn:hover {
-            transform: translateY(-3px) scale(1.05);
-            box-shadow: var(--shadow-md);
-        }
-
-        .action-btn:hover i {
-            transform: scale(1.2) rotate(5deg);
-        }
-
-        .action-btn:active {
-            transform: translateY(0) scale(0.98);
-        }
-
-        .btn-primary-custom {
+        .btn-bot {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
         }
 
-        .btn-primary-custom:hover {
-            background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+        .btn-bot:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
-        .btn-success-custom {
-            background: var(--gradient-success);
+        .btn-close-chat {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
         }
 
-        .btn-success-custom:hover {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        .btn-close-chat:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
         }
 
-        .btn-info-custom {
-            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-            color: white;
-        }
-
-        .btn-info-custom:hover {
-            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
-        }
-
-        .btn-warning-custom {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-        }
-
-        .btn-warning-custom:hover {
-            background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
-        }
-
-        .btn-danger-custom {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-        }
-
-        .btn-danger-custom:hover {
-            background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
-        }
-
-        /* ===== MENSAJES AREA ===== */
-        .messages-container {
+        /* ===== MESSAGES AREA ===== */
+        .messages-area {
             flex: 1;
             overflow-y: auto;
             padding: 2rem;
-            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100"><rect fill="%23F0F2F5" width="100" height="100"/><path d="M0 0 L50 50 L100 0 L100 100 L50 50 L0 100 Z" fill="%23E5E7EB" opacity="0.1"/></svg>');
-            background-size: 100px 100px;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(0,0,0,.02) 35px, rgba(0,0,0,.02) 70px);
+            background-color: var(--chat-bg);
         }
 
-        .messages-container::-webkit-scrollbar {
-            width: 10px;
+        .messages-area::-webkit-scrollbar {
+            width: 8px;
         }
 
-        .messages-container::-webkit-scrollbar-track {
-            background: #F5F5F5;
-        }
-
-        .messages-container::-webkit-scrollbar-thumb {
-            background: linear-gradient(180deg, var(--primary-green), var(--dark-green));
+        .messages-area::-webkit-scrollbar-thumb {
+            background: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
         }
 
         .message {
             display: flex;
             margin-bottom: 1.5rem;
-            animation: fadeIn 0.4s ease;
+            animation: messageSlideIn 0.3s ease;
+        }
+
+        @keyframes messageSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .message.customer {
             justify-content: flex-start;
         }
 
-        .message.operator,
-        .message.bot {
+        .message.operator {
             justify-content: flex-end;
         }
 
+        .message.bot {
+            justify-content: flex-start;
+        }
+
         .message-bubble {
-            max-width: 70%;
-            padding: 1rem 1.25rem;
-            border-radius: 18px;
-            box-shadow: var(--shadow-sm);
-            animation: slideIn 0.4s ease;
+            max-width: 65%;
+            padding: 1rem 1.2rem;
+            border-radius: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
             position: relative;
         }
 
         .message.customer .message-bubble {
-            background: white;
-            border: 2px solid #E5E7EB;
+            background: var(--customer-bubble);
             border-bottom-left-radius: 4px;
         }
 
         .message.operator .message-bubble {
-            background: linear-gradient(135deg, var(--operator-bubble), #C8E6C9);
+            background: linear-gradient(135deg, #DCF8C6 0%, #C8E6C9 100%);
             border-bottom-right-radius: 4px;
         }
 
         .message.bot .message-bubble {
-            background: linear-gradient(135deg, var(--bot-bubble), #BBDEFB);
-            border-bottom-right-radius: 4px;
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            border-bottom-left-radius: 4px;
         }
 
         .message-sender {
-            font-weight: 700;
-            font-size: 0.85rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-secondary);
             margin-bottom: 0.5rem;
-            color: var(--dark-green);
-            display: flex;
-            align-items: center;
-            gap: 0.4rem;
         }
 
         .message-content {
@@ -585,198 +372,138 @@
         }
 
         .message-time {
-            font-size: 0.75rem;
+            font-size: 0.7rem;
             color: var(--text-secondary);
             margin-top: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.3rem;
+            text-align: right;
         }
 
         .media-preview {
             max-width: 100%;
             max-height: 300px;
             border-radius: 12px;
-            margin-top: 0.75rem;
-            box-shadow: var(--shadow-md);
-            transition: transform 0.3s;
+            margin-top: 0.5rem;
         }
 
-        .media-preview:hover {
-            transform: scale(1.05);
-        }
-
-        /* ===== INPUT AREA MEJORADO ===== */
+        /* ===== INPUT AREA ===== */
         .input-area {
             padding: 1.5rem 2rem;
             background: white;
-            border-top: 2px solid #E5E7EB;
-            box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .file-preview-area {
-            padding: 1rem;
-            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-            border-radius: 12px;
-            margin-bottom: 1rem;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            box-shadow: var(--shadow-sm);
-            animation: fadeIn 0.3s ease;
-        }
-
-        .file-preview-area.show {
-            display: flex;
-        }
-
-        .file-info {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .file-info i {
-            font-size: 1.5rem;
-            color: var(--primary-green);
+            border-top: 1px solid var(--border);
         }
 
         .input-controls {
             display: flex;
-            gap: 0.75rem;
-            align-items: center;
+            gap: 0.8rem;
+            margin-bottom: 1rem;
         }
 
-        .media-buttons {
+        .file-input-wrapper {
+            position: relative;
+        }
+
+        .file-input-wrapper input[type=file] {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .btn-file {
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            background: white;
+            color: var(--text-primary);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
+            align-items: center;
             gap: 0.5rem;
         }
 
-        .media-btn {
-            width: 45px;
-            height: 45px;
+        .btn-file:hover {
+            background: var(--light-green);
+            border-color: var(--primary-green);
+            color: var(--dark-green);
+            transform: translateY(-2px);
+        }
+
+        .btn-video-call {
+            padding: 0.6rem 1.2rem;
+            border-radius: 12px;
             border: none;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
-            color: var(--primary-green);
-            font-size: 1.25rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-weight: 500;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-sm);
-            position: relative;
-            overflow: hidden;
+            gap: 0.5rem;
         }
 
-        .media-btn::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: var(--primary-green);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.4s, height 0.4s;
+        .btn-video-call:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 
-        .media-btn:hover::before {
-            width: 100%;
-            height: 100%;
+        .file-preview {
+            background: var(--light-green);
+            padding: 0.8rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
         }
 
-        .media-btn i {
-            position: relative;
-            z-index: 1;
-            transition: all 0.3s;
-        }
-
-        .media-btn:hover {
-            transform: scale(1.1) rotate(5deg);
-            box-shadow: var(--shadow-md);
-        }
-
-        .media-btn:hover i {
-            color: white;
-            transform: scale(1.1);
-        }
-
-        .message-input-wrapper {
-            flex: 1;
-            position: relative;
+        .message-input-group {
+            display: flex;
+            gap: 0.8rem;
+            align-items: center;
         }
 
         .message-input {
-            width: 100%;
+            flex: 1;
             padding: 1rem 1.5rem;
-            border: 2px solid #E5E7EB;
-            border-radius: 25px;
+            border: 2px solid var(--border);
+            border-radius: 50px;
             font-size: 0.95rem;
-            transition: all 0.3s;
-            background: #FAFAFA;
+            transition: all 0.3s ease;
+            outline: none;
         }
 
         .message-input:focus {
-            outline: none;
             border-color: var(--primary-green);
-            background: white;
             box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.1);
         }
 
-        .send-btn {
-            width: 50px;
-            height: 50px;
+        .btn-send {
+            padding: 1rem 2rem;
+            border-radius: 50px;
             border: none;
-            border-radius: 50%;
             background: linear-gradient(135deg, var(--primary-green) 0%, #128C7E 100%);
             color: white;
-            font-size: 1.5rem;
+            font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
-            justify-content: center;
-            box-shadow: var(--shadow-md);
-            position: relative;
-            overflow: hidden;
+            gap: 0.5rem;
         }
 
-        .send-btn::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            transform: translate(-50%, -50%);
-            transition: width 0.6s, height 0.6s;
+        .btn-send:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
         }
 
-        .send-btn:hover::after {
-            width: 200px;
-            height: 200px;
+        .btn-send:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        .send-btn:hover {
-            transform: scale(1.15) rotate(15deg);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .send-btn i {
-            position: relative;
-            z-index: 1;
-        }
-
-        .send-btn:active {
-            transform: scale(0.95) rotate(0deg);
-        }
-
-        /* ===== ESTADO VACÍO ===== */
+        /* ===== EMPTY STATE ===== */
         .empty-state {
             display: flex;
             flex-direction: column;
@@ -784,464 +511,460 @@
             justify-content: center;
             height: 100%;
             color: var(--text-secondary);
-            padding: 2rem;
             text-align: center;
+            padding: 3rem;
         }
 
         .empty-state i {
-            font-size: 6rem;
+            font-size: 5rem;
             margin-bottom: 1.5rem;
-            color: #D1D5DB;
-            animation: bounce 3s infinite;
+            opacity: 0.2;
+            animation: float 3s ease-in-out infinite;
         }
 
-        .empty-state h3 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-            color: var(--text-primary);
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
 
         .empty-state p {
-            font-size: 1rem;
-            max-width: 400px;
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        /* ===== LOGIN MODAL ===== */
+        .modal-content {
+            border-radius: 20px;
+            border: none;
+            overflow: hidden;
+        }
+
+        .modal-header {
+            background: linear-gradient(135deg, var(--primary-green) 0%, #128C7E 100%);
+            color: white;
+            border: none;
+            padding: 2rem;
+        }
+
+        .modal-body {
+            padding: 2rem;
+        }
+
+        .form-control {
+            padding: 1rem;
+            border-radius: 12px;
+            border: 2px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.1);
+            outline: none;
+        }
+
+        .btn-login {
+            width: 100%;
+            padding: 1rem;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, var(--primary-green) 0%, #128C7E 100%);
+            color: white;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(37, 211, 102, 0.4);
         }
 
         /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
             .sidebar {
-                width: 350px;
-            }
-        }
-
-        @media (max-width: 992px) {
-            .main-container {
-                padding: 1rem;
-            }
-
-            .sidebar {
                 width: 320px;
-            }
-
-            .action-btn span {
-                display: none;
-            }
-
-            .action-btn {
-                padding: 0.75rem;
             }
         }
 
         @media (max-width: 768px) {
             .main-container {
                 flex-direction: column;
-                gap: 1rem;
+                padding: 0.5rem;
             }
 
             .sidebar {
                 width: 100%;
-                border-radius: 20px;
-                max-height: 40vh;
+                border-radius: 20px 20px 0 0;
+                height: 40%;
             }
 
             .chat-area {
-                border-radius: 20px;
+                border-radius: 0 0 20px 20px;
             }
-        }
-
-        /* ===== LOADING SPINNER ===== */
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid #E5E7EB;
-            border-top-color: var(--primary-green);
-            border-radius: 50%;
-            animation: rotate 1s linear infinite;
-        }
-
-        /* ===== TOOLTIPS MEJORADOS ===== */
-        [data-tooltip] {
-            position: relative;
-        }
-
-        [data-tooltip]::after {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: 100%;
-            left: 50%;
-            transform: translateX(-50%) translateY(-5px);
-            padding: 0.5rem 1rem;
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s, transform 0.3s;
-            box-shadow: var(--shadow-md);
-        }
-
-        [data-tooltip]:hover::after {
-            opacity: 1;
-            transform: translateX(-50%) translateY(-10px);
-        }
-
-        /* ===== NOTIFICACIONES TOAST ===== */
-        .toast-container {
-            position: fixed;
-            top: 100px;
-            right: 20px;
-            z-index: 10000;
-        }
-
-        .toast-notification {
-            background: white;
-            padding: 1rem 1.5rem;
-            border-radius: 12px;
-            box-shadow: var(--shadow-lg);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            min-width: 300px;
-            animation: slideIn 0.3s ease;
-        }
-
-        .toast-notification.success {
-            border-left: 5px solid #10b981;
-        }
-
-        .toast-notification.error {
-            border-left: 5px solid #ef4444;
-        }
-
-        .toast-notification.info {
-            border-left: 5px solid #3b82f6;
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar">
-        <div class="d-flex justify-content-between align-items-center w-100">
-            <div class="navbar-brand">
-                <i class="fab fa-whatsapp"></i>
+        <div class="container-fluid">
+            <span class="navbar-brand">
+                <i class="bi bi-whatsapp"></i>
                 Panel de Operadores
-            </div>
+            </span>
             <div class="d-flex align-items-center gap-3">
-                <span id="operatorName" class="text-white fw-bold">WILSON</span>
-                <span id="statusBadge" class="status-badge status-online">
-                    <span>En Línea</span>
-                </span>
+                <span class="text-white fw-semibold" id="operatorName">Operador</span>
+                <span class="status-badge status-offline" id="connectionStatus">Desconectado</span>
             </div>
         </div>
     </nav>
 
-    <!-- Main Container -->
     <div class="main-container">
-        <!-- Sidebar -->
+        <!-- SIDEBAR -->
         <div class="sidebar">
             <div class="sidebar-header">
                 <h6>
-                    <span><i class="fas fa-comments"></i> Conversaciones</span>
-                    <span class="waiting-badge">
-                        <span id="waitingCount">0</span>
-                    </span>
+                    <span><i class="bi bi-chat-dots"></i> Conversaciones</span>
+                    <span class="waiting-badge" id="waitingCount">0</span>
                 </h6>
             </div>
-            <div id="conversationsList" class="conversations-list">
-                <!-- Las conversaciones se cargarán aquí dinámicamente -->
+            <div class="conversations-list" id="conversationsList">
+                <div class="empty-state">
+                    <i class="bi bi-inbox"></i>
+                    <p>No hay conversaciones activas</p>
+                </div>
             </div>
         </div>
 
-        <!-- Chat Area -->
+        <!-- CHAT AREA -->
         <div class="chat-area">
             <div class="chat-header">
                 <div class="chat-header-info">
-                    <div class="customer-avatar">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div class="customer-details">
-                        <h5 id="customerName">Selecciona una conversación</h5>
-                        <p id="customerPhone"><i class="fas fa-phone"></i> ---</p>
-                    </div>
+                    <h6 id="currentCustomerName">
+                        <i class="bi bi-person-circle"></i>
+                        Selecciona una conversación
+                    </h6>
+                    <small id="currentCustomerPhone"></small>
                 </div>
-                <div class="chat-actions" id="chatActions" style="display: none;">
-                    <button class="action-btn btn-primary-custom" onclick="abrirHistoriaClinicaModal(currentConversationId)" data-tooltip="Historia Clínica">
-                        <i class="fas fa-file-medical"></i>
-                        <span>Historia Clínica</span>
+                <div class="chat-actions">
+                    <button class="btn-modern btn-bot" id="releaseToBotBtn" style="display: none;">
+                        <i class="bi bi-robot"></i>
+                        Devolver al Bot
                     </button>
-                    <button id="videoCallBtn" class="action-btn btn-info-custom" onclick="sendVideoCall()" data-tooltip="Videollamada">
-                        <i class="fas fa-video"></i>
-                        <span>Videollamada</span>
-                    </button>
-                    <button id="releaseToBotBtn" class="action-btn btn-warning-custom" onclick="releaseToBot()" data-tooltip="Devolver al Bot">
-                        <i class="fas fa-robot"></i>
-                        <span>Devolver al Bot</span>
-                    </button>
-                    <button id="closeConversationBtn" class="action-btn btn-danger-custom" onclick="closeConversation()" data-tooltip="Cerrar Chat">
-                        <i class="fas fa-times-circle"></i>
-                        <span>Cerrar Chat</span>
+                    <button class="btn-modern btn-close-chat" id="closeConversationBtn" style="display: none;">
+                        <i class="bi bi-x-circle"></i>
+                        Cerrar Chat
                     </button>
                 </div>
             </div>
 
-            <div class="messages-container" id="messagesArea">
+            <div class="messages-area" id="messagesArea">
                 <div class="empty-state">
-                    <i class="fas fa-comment-dots"></i>
-                    <h3>¡Bienvenido al Panel de Operadores!</h3>
-                    <p>Selecciona una conversación del panel izquierdo para comenzar a chatear con tus clientes.</p>
+                    <i class="bi bi-chat-left-text"></i>
+                    <p>Selecciona una conversación para comenzar</p>
                 </div>
             </div>
 
             <div class="input-area">
-                <div id="filePreview" class="file-preview-area">
-                    <div class="file-info">
-                        <i class="fas fa-paperclip"></i>
-                        <span id="fileName">Archivo seleccionado</span>
+                <div class="input-controls">
+                    <div class="file-input-wrapper">
+                        <label class="btn-file" for="imageInput">
+                            <i class="bi bi-image"></i>
+                            Imagen
+                        </label>
+                        <input type="file" id="imageInput" accept="image/*" disabled>
                     </div>
-                    <button onclick="clearFileSelection()" class="media-btn">
-                        <i class="fas fa-times"></i>
+                    
+                    <div class="file-input-wrapper">
+                        <label class="btn-file" for="documentInput">
+                            <i class="bi bi-file-earmark"></i>
+                            Documento
+                        </label>
+                        <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" disabled>
+                    </div>
+                    
+                    <button class="btn-video-call" id="videoCallBtn" disabled>
+                        <i class="bi bi-camera-video"></i>
+                        Videollamada
                     </button>
                 </div>
 
-                <div class="input-controls">
-                    <div class="media-buttons">
-                        <button class="media-btn" onclick="document.getElementById('imageInput').click()" data-tooltip="Enviar Imagen">
-                            <i class="fas fa-image"></i>
-                        </button>
-                        <input type="file" id="imageInput" accept="image/*" style="display: none" onchange="handleImageSelect(event)">
-                        
-                        <button class="media-btn" onclick="document.getElementById('documentInput').click()" data-tooltip="Enviar Documento">
-                            <i class="fas fa-file-pdf"></i>
-                        </button>
-                        <input type="file" id="documentInput" accept=".pdf,.doc,.docx" style="display: none" onchange="handleDocumentSelect(event)">
-                    </div>
+                <div id="filePreview" class="file-preview" style="display: none;">
+                    <small id="fileName"></small>
+                    <button class="btn btn-link text-danger" id="clearFile">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                </div>
 
-                    <div class="message-input-wrapper">
-                        <input 
-                            type="text" 
-                            id="messageInput" 
-                            class="message-input" 
-                            placeholder="Escribe tu mensaje..."
-                            onkeypress="if(event.key === 'Enter') sendMessage()"
-                            disabled
-                        >
-                    </div>
-
-                    <button id="sendBtn" class="send-btn" onclick="sendMessage()" disabled data-tooltip="Enviar">
-                        <i class="fas fa-paper-plane"></i>
+                <div class="message-input-group">
+                    <input type="text" class="message-input" id="messageInput" 
+                           placeholder="Escribe tu mensaje..." disabled>
+                    <button class="btn-send" id="sendBtn" disabled>
+                        <i class="bi bi-send-fill"></i>
+                        Enviar
                     </button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Sonido de notificación -->
-    <audio id="notificationSound" preload="auto">
-        <source src="/notification.mp3" type="audio/mpeg">
+    <!-- LOGIN MODAL -->
+    <div class="modal fade" id="loginModal" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">
+                        <i class="bi bi-person-badge"></i>
+                        Iniciar Sesión
+                    </h5>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold">Nombre del Operador</label>
+                        <input type="text" class="form-control" id="operatorNameInput" 
+                               placeholder="Ingresa tu nombre">
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn-login" id="loginBtn">
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        Conectar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <audio id="notificationSound" style="display:none;">
+        <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBTGH0fPTgjMGHm7A7+OZMA0PVanr7aZVEwlDm+Lxv24jBDWL0fPUgTUGHG3A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLgwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPUgTUGHm7A7eKaLwwOVKjo7qhTFApBluPwwXAkBDKJ0vPTgzUGHm7A7eKaLwwOVKjo7qhTFA==" type="audio/wav">
     </audio>
 
-    <!-- Toast Container -->
-    <div class="toast-container" id="toastContainer"></div>
-
-    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
-
+    
     <script>
-        let connection = null;
+        let connection;
         let currentConversationId = null;
+        let operatorId = null;
+        let conversations = {};
         let selectedFile = null;
         let selectedFileType = null;
-        let currentConversation = null;
 
-        window.addEventListener('DOMContentLoaded', async () => {
-            await initSignalR();
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginModal = new bootstrap.Modal(document.getElementById('loginModal'));
+            loginModal.show();
+
+            document.getElementById('loginBtn').addEventListener('click', connectOperator);
+            document.getElementById('sendBtn').addEventListener('click', sendMessage);
+            document.getElementById('messageInput').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') sendMessage();
+            });
+            
+            document.getElementById('imageInput').addEventListener('change', handleImageSelect);
+            document.getElementById('documentInput').addEventListener('change', handleDocumentSelect);
+            document.getElementById('clearFile').addEventListener('click', clearFileSelection);
+            document.getElementById('releaseToBotBtn').addEventListener('click', releaseToBot);
+            document.getElementById('videoCallBtn').addEventListener('click', sendVideoCall);
         });
 
-        async function initSignalR() {
-            connection = new signalR.HubConnectionBuilder()
-                .withUrl("/operatorHub")
-                .withAutomaticReconnect()
-                .configureLogging(signalR.LogLevel.Information)
-                .build();
-
-            connection.on("ReceiveWaitingConversations", (conversations) => {
-                console.log('📥 Conversaciones en espera recibidas:', conversations);
-                displayWaitingConversations(conversations);
-                updateWaitingCount();
-            });
-
-            connection.on("ReceiveMessage", (message) => {
-                console.log('📨 Mensaje recibido:', message);
-                
-                if (message.conversationId === currentConversationId) {
-                    displayMessage(message);
-                } else {
-                    playNotificationSound();
-                    showToast('Nuevo mensaje recibido', 'info');
-                }
-
-                updateConversationPreview(message.conversationId, message.content);
-            });
-
-            connection.on("ConversationAssigned", (conversationId, conversation) => {
-                console.log('✅ Conversación asignada:', conversationId);
-                removeFromWaitingList(conversationId);
-                showToast('Nueva conversación asignada', 'success');
-                playNotificationSound();
-            });
-
-            connection.on("ConversationClosed", (conversationId) => {
-                console.log('🔒 Conversación cerrada:', conversationId);
-                removeFromConversationList(conversationId);
-                
-                if (conversationId === currentConversationId) {
-                    clearChatArea();
-                }
-                
-                showToast('Conversación cerrada', 'info');
-            });
-
-            connection.onreconnecting(() => {
-                console.log('🔄 Reconectando SignalR...');
-                updateStatus(false);
-            });
-
-            connection.onreconnected(() => {
-                console.log('✅ SignalR reconectado');
-                updateStatus(true);
-                loadWaitingConversations();
-            });
-
-            connection.onclose(() => {
-                console.log('❌ Conexión SignalR cerrada');
-                updateStatus(false);
-            });
-
-            try {
-                await connection.start();
-                console.log('✅ SignalR conectado exitosamente');
-                updateStatus(true);
-                
-                await loadWaitingConversations();
-            } catch (error) {
-                console.error('❌ Error al conectar SignalR:', error);
-                updateStatus(false);
-                showToast('Error al conectar con el servidor', 'error');
-            }
-        }
-
-        async function loadWaitingConversations() {
-            try {
-                const response = await fetch('/api/operator/waiting-conversations');
-                const conversations = await response.json();
-                
-                console.log('📋 Conversaciones cargadas:', conversations);
-                displayWaitingConversations(conversations);
-                updateWaitingCount();
-            } catch (error) {
-                console.error('Error al cargar conversaciones:', error);
-                showToast('Error al cargar conversaciones', 'error');
-            }
-        }
-
-        function displayWaitingConversations(conversations) {
-            const conversationsList = document.getElementById('conversationsList');
+        async function connectOperator() {
+            const operatorName = document.getElementById('operatorNameInput').value.trim();
             
-            conversations.forEach(conversation => {
-                const existingElement = document.querySelector(`[data-conversation-id="${conversation.conversationId}"]`);
-                
-                if (!existingElement) {
-                    const lastMessage = conversation.messages && conversation.messages.length > 0 
-                        ? conversation.messages[conversation.messages.length - 1].content 
-                        : 'Sin mensajes';
-                    
-                    const lastMessageTime = conversation.messages && conversation.messages.length > 0
-                        ? formatTime(conversation.messages[conversation.messages.length - 1].timestamp)
-                        : '';
+            if (!operatorName) {
+                alert('Por favor ingresa tu nombre');
+                return;
+            }
 
-                    const conversationHtml = `
-                        <div class="conversation-item waiting" 
-                             data-conversation-id="${conversation.conversationId}"
-                             onclick="takeConversation('${conversation.conversationId}')">
-                            <div class="conversation-name">
-                                <i class="fas fa-user-circle"></i>
-                                ${conversation.customerName || 'Cliente ' + conversation.conversationId.substring(0, 4)}
-                            </div>
-                            <div class="conversation-phone">
-                                <i class="fas fa-phone-alt"></i>
-                                ${conversation.phoneNumber}
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center">
-                                <div class="conversation-preview">${lastMessage.substring(0, 50)}...</div>
-                                <div class="conversation-time">
-                                    <i class="far fa-clock"></i>
-                                    ${lastMessageTime}
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                    
-                    conversationsList.insertAdjacentHTML('beforeend', conversationHtml);
+            try {
+                connection = new signalR.HubConnectionBuilder()
+                    .withUrl("/chatHub")
+                    .withAutomaticReconnect()
+                    .build();
+
+                setupSignalREvents();
+
+                await connection.start();
+                console.log('✅ Conectado a SignalR');
+
+                await connection.invoke("RegisterOperator", operatorName);
+                
+                document.getElementById('operatorName').textContent = operatorName;
+                document.getElementById('connectionStatus').textContent = 'En Línea';
+                document.getElementById('connectionStatus').classList.remove('status-offline');
+                document.getElementById('connectionStatus').classList.add('status-online');
+
+                const loginModal = bootstrap.Modal.getInstance(document.getElementById('loginModal'));
+                loginModal.hide();
+
+                await connection.invoke("SendWaitingConversations");
+
+            } catch (error) {
+                console.error('❌ Error al conectar:', error);
+                alert('Error al conectar. Por favor recarga la página.');
+            }
+        }
+
+        function setupSignalREvents() {
+            connection.on("OperatorRegistered", (id) => {
+                operatorId = id;
+                console.log('Operador registrado:', id);
+            });
+
+            connection.on("WaitingConversations", (waitingConversations) => {
+                waitingConversations.forEach(conv => {
+                    addConversationToList(conv, true);
+                });
+                updateWaitingCount();
+            });
+
+            connection.on("NewConversationWaiting", (conversation) => {
+                addConversationToList(conversation, true);
+                playNotificationSound();
+                updateWaitingCount();
+            });
+
+            connection.on("NewConversationAssigned", (conversation) => {
+                addConversationToList(conversation, false);
+                selectConversation(conversation.conversationId);
+            });
+
+            connection.on("ConversationAssigned", (conversation) => {
+                addConversationToList(conversation, false);
+                selectConversation(conversation.conversationId);
+            });
+
+            connection.on("ConversationTaken", (conversationId) => {
+                const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+                if (element) element.remove();
+                updateWaitingCount();
+            });
+
+            connection.on("MessageSent", (conversationId, message) => {
+                if (conversations[conversationId]) {
+                    conversations[conversationId].messages.push(message);
+                    if (currentConversationId === conversationId) {
+                        displayMessage(message);
+                    }
                 }
+            });
+
+            connection.on("BotHandledMessage", (conversation) => {
+                addConversationToList(conversation, false);
+            });
+
+            connection.on("NewMessageReceived", (conversationId, message) => {
+                console.log('Nuevo mensaje recibido:', message);
+                if (conversations[conversationId]) {
+                    conversations[conversationId].messages.push(message);
+                    if (currentConversationId === conversationId) {
+                        displayMessage(message);
+                    }
+                    updateConversationPreview(conversationId, message.content);
+                }
+            });
+
+            connection.on("CustomerMessageReceived", (conversationId, message) => {
+                console.log('Mensaje del cliente para operador:', message);
+                if (conversations[conversationId]) {
+                    conversations[conversationId].messages.push(message);
+                    if (currentConversationId === conversationId) {
+                        displayMessage(message);
+                        playNotificationSound();
+                    }
+                }
+            });
+
+            connection.on("ConversationReleasedToBot", (conversationId) => {
+                const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+                if (element) {
+                    element.remove();
+                }
+                
+                if (currentConversationId === conversationId) {
+                    currentConversationId = null;
+                    document.getElementById('messageInput').disabled = true;
+                    document.getElementById('sendBtn').disabled = true;
+                    document.getElementById('releaseToBotBtn').style.display = 'none';
+                    document.getElementById('closeConversationBtn').style.display = 'none';
+                    document.getElementById('videoCallBtn').disabled = true;
+                    document.getElementById('imageInput').disabled = true;
+                    document.getElementById('documentInput').disabled = true;
+                    
+                    const messagesArea = document.getElementById('messagesArea');
+                    messagesArea.innerHTML = '<div class="empty-state"><i class="bi bi-chat-left-text"></i><p>Selecciona una conversación para comenzar</p></div>';
+                }
+                
+                console.log('✅ Conversación devuelta al bot:', conversationId);
             });
         }
 
-        async function takeConversation(conversationId) {
-            try {
-                await connection.invoke("TakeConversation", conversationId);
-                console.log('✅ Conversación tomada:', conversationId);
-                
-                const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-                if (element) {
-                    element.classList.remove('waiting');
-                    element.classList.add('active');
-                }
-                
-                await loadConversationDetails(conversationId);
-                showToast('Conversación asignada exitosamente', 'success');
-            } catch (error) {
-                console.error('Error al tomar conversación:', error);
-                showToast('Error al tomar la conversación', 'error');
-            }
+        function addConversationToList(conversation, isWaiting) {
+            if (conversations[conversation.conversationId]) return;
+            
+            conversations[conversation.conversationId] = conversation;
+
+            const listContainer = document.getElementById('conversationsList');
+            
+            const emptyState = listContainer.querySelector('.empty-state');
+            if (emptyState) emptyState.remove();
+
+            const lastMessage = conversation.messages[conversation.messages.length - 1];
+            const lastMessageText = lastMessage ? lastMessage.content.substring(0, 50) : 'Sin mensajes';
+
+            const conversationHtml = `
+                <div class="conversation-item ${isWaiting ? 'waiting' : ''}" 
+                     data-conversation-id="${conversation.conversationId}"
+                     onclick="selectConversation('${conversation.conversationId}')">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div class="flex-grow-1">
+                            <div class="conversation-name">
+                                ${conversation.customerName}
+                                ${isWaiting ? '<span class="badge bg-warning text-dark">ESPERANDO</span>' : ''}
+                            </div>
+                            <div class="conversation-phone">${conversation.phoneNumber}</div>
+                            <div class="conversation-preview">${lastMessageText}...</div>
+                        </div>
+                        <div class="conversation-time">${formatTime(conversation.lastActivity)}</div>
+                    </div>
+                </div>
+            `;
+
+            listContainer.insertAdjacentHTML('afterbegin', conversationHtml);
+            updateWaitingCount();
         }
 
-        async function loadConversationDetails(conversationId) {
-            try {
-                const response = await fetch(`/api/operator/conversation/${conversationId}`);
-                const conversation = await response.json();
-                
-                currentConversationId = conversationId;
-                currentConversation = conversation;
-                
-                document.querySelectorAll('.conversation-item').forEach(item => {
-                    item.classList.remove('active');
-                });
-                
-                const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-                if (element) {
-                    element.classList.add('active');
-                }
-                
-                document.getElementById('customerName').textContent = conversation.customerName || 'Cliente ' + conversationId.substring(0, 8);
-                document.getElementById('customerPhone').innerHTML = `<i class="fas fa-phone"></i> ${conversation.phoneNumber}`;
-                document.getElementById('chatActions').style.display = 'flex';
-                document.getElementById('messageInput').disabled = false;
-                document.getElementById('sendBtn').disabled = false;
-                document.getElementById('closeConversationBtn').style.display = 'block';
-                document.getElementById('releaseToBotBtn').style.display = 'block';
-                document.getElementById('imageInput').disabled = false;
-                document.getElementById('documentInput').disabled = false;
-                document.getElementById('videoCallBtn').disabled = false;
-                
-                displayMessages(conversation.messages);
-            } catch (error) {
-                console.error('Error al cargar detalles de conversación:', error);
-                showToast('Error al cargar la conversación', 'error');
+        async function selectConversation(conversationId) {
+            const conversation = conversations[conversationId];
+            if (!conversation) return;
+
+            if (conversation.status === 0) {
+                await connection.invoke("TakeConversation", conversationId);
             }
+
+            currentConversationId = conversationId;
+
+            document.querySelectorAll('.conversation-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            
+            const selectedElement = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+            if (selectedElement) {
+                selectedElement.classList.remove('waiting');
+                selectedElement.classList.add('active');
+            }
+
+            document.getElementById('currentCustomerName').innerHTML = 
+                `<i class="bi bi-person-circle"></i> ${conversation.customerName}`;
+            document.getElementById('currentCustomerPhone').textContent = conversation.phoneNumber;
+            
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendBtn').disabled = false;
+            document.getElementById('closeConversationBtn').style.display = 'block';
+            document.getElementById('releaseToBotBtn').style.display = 'block';
+            document.getElementById('imageInput').disabled = false;
+            document.getElementById('documentInput').disabled = false;
+            document.getElementById('videoCallBtn').disabled = false;
+
+            displayMessages(conversation.messages);
         }
 
         function displayMessages(messages) {
@@ -1260,14 +983,11 @@
             
             let messageClass = 'customer';
             let senderName = message.sender;
-            let senderIcon = '<i class="fas fa-user"></i>';
             
             if (message.type === 1) {
                 messageClass = 'operator';
-                senderIcon = '<i class="fas fa-user-tie"></i>';
             } else if (message.type === 2) {
                 messageClass = 'bot';
-                senderIcon = '<i class="fas fa-robot"></i>';
                 senderName = '🤖 ' + senderName;
             }
 
@@ -1277,10 +997,10 @@
                 if (message.mediaType === 'image') {
                     contentHtml += `<br><img src="${message.mediaUrl}" class="media-preview" alt="Imagen">`;
                 } else if (message.mediaType === 'document') {
-                    contentHtml += `<br><i class="fas fa-file-pdf"></i> <a href="${message.mediaUrl}" target="_blank">Ver documento</a>`;
+                    contentHtml += `<br><i class="bi bi-file-earmark"></i> <a href="${message.mediaUrl}" target="_blank">Ver documento</a>`;
                 } else if (message.mediaType === 'video_call') {
                     contentHtml += `<br><a href="${message.mediaUrl}" target="_blank" class="btn btn-sm btn-primary mt-2">
-                        <i class="fas fa-video"></i> Abrir videollamada
+                        <i class="bi bi-camera-video"></i> Abrir videollamada
                     </a>`;
                 }
             }
@@ -1288,12 +1008,9 @@
             const messageHtml = `
                 <div class="message ${messageClass}">
                     <div class="message-bubble">
-                        <div class="message-sender">${senderIcon} ${senderName}</div>
+                        <div class="message-sender">${senderName}</div>
                         <div class="message-content">${contentHtml}</div>
-                        <div class="message-time">
-                            <i class="far fa-clock"></i>
-                            ${formatTime(message.timestamp)}
-                        </div>
+                        <div class="message-time">${formatTime(message.timestamp)}</div>
                     </div>
                 </div>
             `;
@@ -1321,7 +1038,7 @@
                 messageInput.focus();
             } catch (error) {
                 console.error('Error al enviar mensaje:', error);
-                showToast('Error al enviar el mensaje', 'error');
+                alert('Error al enviar el mensaje');
             }
         }
 
@@ -1331,7 +1048,7 @@
                 selectedFile = file;
                 selectedFileType = 'image';
                 document.getElementById('fileName').textContent = `🖼️ ${file.name}`;
-                document.getElementById('filePreview').classList.add('show');
+                document.getElementById('filePreview').style.display = 'flex';
             }
         }
 
@@ -1341,7 +1058,7 @@
                 selectedFile = file;
                 selectedFileType = 'document';
                 document.getElementById('fileName').textContent = `📄 ${file.name}`;
-                document.getElementById('filePreview').classList.add('show');
+                document.getElementById('filePreview').style.display = 'flex';
             }
         }
 
@@ -1350,7 +1067,7 @@
             selectedFileType = null;
             document.getElementById('imageInput').value = '';
             document.getElementById('documentInput').value = '';
-            document.getElementById('filePreview').classList.remove('show');
+            document.getElementById('filePreview').style.display = 'none';
         }
 
         async function sendFile() {
@@ -1371,7 +1088,7 @@
 
                 if (!uploadResponse.ok) {
                     const error = await uploadResponse.json();
-                    showToast(`Error: ${error.message || 'No se pudo subir el archivo'}`, 'error');
+                    alert(`Error: ${error.message || 'No se pudo subir el archivo'}`);
                     return;
                 }
 
@@ -1390,29 +1107,13 @@
 
                     messageInput.value = '';
                     clearFileSelection();
-                    showToast('Archivo enviado correctamente', 'success');
                     console.log('✅ Archivo enviado correctamente');
                 } else {
-                    showToast('Error al procesar el archivo', 'error');
+                    alert('Error al procesar el archivo');
                 }
             } catch (error) {
                 console.error('Error al enviar archivo:', error);
-                showToast('Error al enviar el archivo', 'error');
-            }
-        }
-
-        async function closeConversation() {
-            if (!currentConversationId) return;
-
-            if (confirm('¿Estás seguro de cerrar esta conversación? El cliente ya no podrá enviar mensajes.')) {
-                try {
-                    await connection.invoke("CloseConversation", currentConversationId);
-                    console.log('✅ Conversación cerrada');
-                    showToast('Conversación cerrada exitosamente', 'success');
-                } catch (error) {
-                    console.error('Error al cerrar conversación:', error);
-                    showToast('Error al cerrar la conversación', 'error');
-                }
+                alert('Error al enviar el archivo. Por favor intenta nuevamente.');
             }
         }
 
@@ -1422,11 +1123,10 @@
             if (confirm('¿Estás seguro de devolver esta conversación al bot? El bot continuará atendiendo al cliente automáticamente.')) {
                 try {
                     await connection.invoke("ReleaseConversationToBot", currentConversationId);
-                    showToast('Conversación devuelta al bot', 'success');
                     console.log('✅ Conversación devuelta al bot');
                 } catch (error) {
                     console.error('Error al devolver al bot:', error);
-                    showToast('Error al devolver la conversación al bot', 'error');
+                    alert('Error al devolver la conversación al bot');
                 }
             }
         }
@@ -1437,64 +1137,17 @@
             if (confirm('¿Deseas enviar una invitación de videollamada al cliente?')) {
                 try {
                     await connection.invoke("SendVideoCallToCustomer", currentConversationId);
-                    showToast('Invitación de videollamada enviada', 'success');
                     console.log('✅ Invitación de videollamada enviada');
                 } catch (error) {
                     console.error('Error al enviar videollamada:', error);
-                    showToast('Error al enviar la invitación', 'error');
+                    alert('Error al enviar la invitación de videollamada');
                 }
             }
-        }
-
-        function removeFromWaitingList(conversationId) {
-            const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-            if (element && element.classList.contains('waiting')) {
-                element.classList.remove('waiting');
-                updateWaitingCount();
-            }
-        }
-
-        function removeFromConversationList(conversationId) {
-            const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-            if (element) {
-                element.style.animation = 'fadeIn 0.3s ease reverse';
-                setTimeout(() => element.remove(), 300);
-            }
-            updateWaitingCount();
-        }
-
-        function clearChatArea() {
-            currentConversationId = null;
-            currentConversation = null;
-            
-            document.getElementById('customerName').textContent = 'Selecciona una conversación';
-            document.getElementById('customerPhone').innerHTML = '<i class="fas fa-phone"></i> ---';
-            document.getElementById('chatActions').style.display = 'none';
-            document.getElementById('messageInput').disabled = true;
-            document.getElementById('sendBtn').disabled = true;
-            document.getElementById('messagesArea').innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-comment-dots"></i>
-                    <h3>¡Bienvenido al Panel de Operadores!</h3>
-                    <p>Selecciona una conversación del panel izquierdo para comenzar a chatear con tus clientes.</p>
-                </div>
-            `;
         }
 
         function updateWaitingCount() {
             const waitingCount = document.querySelectorAll('.conversation-item.waiting').length;
             document.getElementById('waitingCount').textContent = waitingCount;
-        }
-
-        function updateStatus(isOnline) {
-            const statusBadge = document.getElementById('statusBadge');
-            if (isOnline) {
-                statusBadge.className = 'status-badge status-online';
-                statusBadge.innerHTML = '<span>En Línea</span>';
-            } else {
-                statusBadge.className = 'status-badge status-offline';
-                statusBadge.innerHTML = '<span>Desconectado</span>';
-            }
         }
 
         function formatTime(timestamp) {
@@ -1527,33 +1180,6 @@
                 }
             }
         }
-
-        function showToast(message, type = 'info') {
-            const toastContainer = document.getElementById('toastContainer');
-            const toast = document.createElement('div');
-            toast.className = `toast-notification ${type}`;
-            
-            let icon = 'info-circle';
-            if (type === 'success') icon = 'check-circle';
-            if (type === 'error') icon = 'exclamation-circle';
-            
-            toast.innerHTML = `
-                <i class="fas fa-${icon}" style="font-size: 1.5rem;"></i>
-                <div>
-                    <div style="font-weight: 600;">${message}</div>
-                </div>
-            `;
-            
-            toastContainer.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.style.animation = 'fadeIn 0.3s ease reverse';
-                setTimeout(() => toast.remove(), 300);
-            }, 3000);
-        }
     </script>
-
-    <!-- Script del Modal de Historia Clínica -->
-    <script src="/historia-clinica-modal.js"></script>
 </body>
 </html>

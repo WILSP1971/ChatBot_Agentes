@@ -47,8 +47,8 @@ app.UseRouting();
 app.UseAuthorization();
 
 app.MapControllers();
-app.MapHub<ChatHub>("/chatHub");
-
+//app.MapHub<ChatHub>("/chatHub");
+app.MapHub<ChatHub>("/operatorHub");
 Console.WriteLine("✅ Aplicación iniciada correctamente");
 
 app.Run();

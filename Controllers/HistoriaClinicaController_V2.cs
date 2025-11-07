@@ -86,7 +86,6 @@ namespace WhatsAppChatbot.Controllers
                         WHERE Estado = 'A'
                         ORDER BY Nombre";
 
-
                     using (var command = new SqlCommand(query, connection))
                     {
                         using (var reader = await command.ExecuteReaderAsync())

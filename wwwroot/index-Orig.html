@@ -468,6 +468,73 @@
         }
 
 
+        .action-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-size: 1.3rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s;
+        }
+
+        .action-btn:hover::before {
+            width: 100%;
+            height: 100%;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        }
+
+        .action-btn:active {
+            transform: translateY(0) scale(0.98);
+        }
+
+        .action-btn i {
+            position: relative;
+            z-index: 1;
+        }
+
+        .btn-image {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-document {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+        }
+
+        .btn-video-call {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+        }
+
+        .btn-medical-record {
+            background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            color: white;
+        }
+
         .file-preview {
             background: var(--light-green);
             padding: 0.8rem;
@@ -686,26 +753,46 @@
 
             <div class="input-area">
                 <div class="input-controls">
-                    <div class="file-input-wrapper">
+                    <!-- Botón Imagen -->
+                    <button class="action-btn btn-image" onclick="document.getElementById('imageInput').click()" 
+                            id="imageBtn" disabled data-bs-toggle="tooltip" title="Enviar imagen">
+                        <i class="fas fa-image"></i>
+                    </button>
+                    <input type="file" id="imageInput" accept="image/*" onchange="handleImageSelect(event)">
+
+                    <!-- <div class="file-input-wrapper">
                         <label class="btn-file" for="imageInput">
                             <i class="bi bi-image"></i>
                             Imagen
                         </label>
                         <input type="file" id="imageInput" accept="image/*" disabled>
-                    </div>
+                    </div> -->
                     
-                    <div class="file-input-wrapper">
+                    <!-- Botón Documento -->
+                    <button class="action-btn btn-document" onclick="document.getElementById('documentInput').click()" 
+                            id="documentBtn" disabled data-bs-toggle="tooltip" title="Enviar documento">
+                        <i class="fas fa-file-alt"></i>
+                    </button>
+                    <input type="file" id="documentInput" accept=".pdf,.doc,.docx" onchange="handleDocumentSelect(event)">
+
+                    <!-- <div class="file-input-wrapper">
                         <label class="btn-file" for="documentInput">
                             <i class="bi bi-file-earmark"></i>
                             Documento
                         </label>
                         <input type="file" id="documentInput" accept=".pdf,.doc,.docx,.txt" disabled>
-                    </div>
+                    </div> -->
                     
-                    <button class="btn-video-call" id="videoCallBtn" disabled>
+                    <!-- Botón Videollamada -->
+                    <button class="action-btn btn-video-call" onclick="sendVideoCall()" 
+                            id="videoCallBtn" disabled data-bs-toggle="tooltip" title="Iniciar videollamada">
+                        <i class="fas fa-video"></i>
+                    </button>
+
+                    <!-- <button class="btn-video-call" id="videoCallBtn" disabled>
                         <i class="bi bi-camera-video"></i>
                         Videollamada
-                    </button>
+                    </button> -->
 
                     <button class="btn-histc" onclick="abrirHistoriaClinicaModal(currentConversationId)" title="Diligenciar Historia Clínica">
                         <i class="bi bi-clipboard-heart"></i>

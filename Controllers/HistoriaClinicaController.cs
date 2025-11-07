@@ -33,11 +33,11 @@ namespace WhatsAppChatbot.Controllers
                     
                     var query = @"
                         SELECT 
-                            TipoIdentificacionId AS Codigo,
-                            Descripcion
-                        FROM TiposIdentificacion
-                        WHERE Activo = 1
-                        ORDER BY Orden, Descripcion";
+                            TipoDocumento AS Codigo,
+                            NomDocumento as Descripcion
+                        FROM tipodocumento
+                        WHERE Estado = 'A'
+                        ORDER BY NomDocumento";
 
                     using (var command = new SqlCommand(query, connection))
                     {
@@ -80,10 +80,10 @@ namespace WhatsAppChatbot.Controllers
                     
                     var query = @"
                         SELECT 
-                            DepartamentoId AS Codigo,
+                            Cod_Dpto AS Codigo,
                             Nombre
                         FROM Departamentos
-                        WHERE Activo = 1
+                        WHERE Estado = 'A'
                         ORDER BY Nombre";
 
                     using (var command = new SqlCommand(query, connection))
@@ -126,11 +126,10 @@ namespace WhatsAppChatbot.Controllers
                     await connection.OpenAsync();
                     
                     var query = @"
-                        SELECT TOP 1000
-                            Codigo,
-                            Descripcion
-                        FROM DiagnosticosCIE10
-                        WHERE Activo = 1
+                        SELECT Codigo,
+                            descrip as Descripcion
+                        FROM diagnostico
+                        WHERE Estado = 'A'
                         ORDER BY Codigo";
 
                     using (var command = new SqlCommand(query, connection))

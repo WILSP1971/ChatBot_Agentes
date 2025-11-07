@@ -65,7 +65,7 @@ public class WebhookController : ControllerBase
                 var from = message.GetProperty("from").GetString() ?? "";
                 var messageId = message.GetProperty("id").GetString() ?? "";
                 
-                // ⭐ Obtener tipo de mensaje
+                // Obtener tipo de mensaje
                 var messageType = message.GetProperty("type").GetString() ?? "text";
                 
                 string messageBody = "";
@@ -92,7 +92,7 @@ public class WebhookController : ControllerBase
                     messageBody = message.GetProperty("text").GetProperty("body").GetString() ?? "";
                 }
 
-                // ⭐ Procesar diferentes tipos de mensajes
+                // Procesar diferentes tipos de mensajes
                 switch (messageType)
                 {
                     case "text":
@@ -155,7 +155,7 @@ public class WebhookController : ControllerBase
 
                 _conversationManager.AddMessage(conversation.ConversationId, customerMessage);
 
-                // ⭐ NUEVO: Guardar mensaje en base de datos
+                // Guardar mensaje en base de datos
                 await _databaseService.GuardarMensajeChat(
                     conversation.ConversationId,
                     conversation.PhoneNumber,
@@ -169,21 +169,31 @@ public class WebhookController : ControllerBase
                     mediaType
                 );
 
-                // Notificar a todos los operadores del nuevo mensaje
-                await _hubContext.Clients.All.SendAsync("NewMessageReceived", conversation.ConversationId, customerMessage);
+                // ✅ CORREGIDO: Notificar usando el método correcto "NewMessage"
+                await _hubContext.Clients.All.SendAsync("NewMessage", new {
+                    conversationId = conversation.ConversationId,
+                    messageId = customerMessage.MessageId,
+                    content = customerMessage.Content,
+                    type = (int)customerMessage.Type,
+                    timestamp = customerMessage.Timestamp,
+                    sender = customerMessage.Sender,
+                    mediaUrl = customerMessage.MediaUrl,
+                    mediaType = customerMessage.MediaType
+                });
 
                 // Verificar si hay un operador atendiendo
                 if (conversation.Status == ConversationStatus.Active && !string.IsNullOrEmpty(conversation.AssignedOperator))
                 {
                     Console.WriteLine($"👤 Operador activo - Bot NO responde");
                     
-                    // Notificar al operador específico
-                    await _hubContext.Clients.Client(conversation.AssignedOperator)
-                        .SendAsync("CustomerMessageReceived", conversation.ConversationId, customerMessage);
+                    // Notificar cambio de estado
+                    await _hubContext.Clients.All.SendAsync("ConversationStatusChanged", 
+                        conversation.ConversationId, 
+                        (int)conversation.Status);
                 }
                 else
                 {
-                    // ⭐ Solo procesar con bot si es mensaje de texto
+                    // Solo procesar con bot si es mensaje de texto
                     if (messageType == "text")
                     {
                         var (handled, botResponse) = await _aiBotService.ProcessMessage(messageBody, from);
@@ -201,7 +211,7 @@ public class WebhookController : ControllerBase
                             
                             _conversationManager.AddMessage(conversation.ConversationId, botMessage);
                             
-                            // ⭐ NUEVO: Guardar mensaje del bot en BD
+                            // Guardar mensaje del bot en BD
                             await _databaseService.GuardarMensajeChat(
                                 conversation.ConversationId,
                                 conversation.PhoneNumber,
@@ -213,24 +223,32 @@ public class WebhookController : ControllerBase
                                 DateTime.UtcNow
                             );
                             
-                            await _hubContext.Clients.All.SendAsync("BotHandledMessage", conversation);
+                            // ✅ CORREGIDO: Notificar usando "NewMessage"
+                            await _hubContext.Clients.All.SendAsync("NewMessage", new {
+                                conversationId = conversation.ConversationId,
+                                messageId = botMessage.MessageId,
+                                content = botMessage.Content,
+                                type = (int)botMessage.Type,
+                                timestamp = botMessage.Timestamp,
+                                sender = botMessage.Sender
+                            });
+
+                            // ✅ CORREGIDO: Notificar cambio de estado
+                            await _hubContext.Clients.All.SendAsync("ConversationStatusChanged", 
+                                conversation.ConversationId, 
+                                (int)conversation.Status);
                         }
                         else
                         {
                             conversation.Status = ConversationStatus.Waiting;
-                            var availableOperator = _conversationManager.GetAvailableOperator();
                             
-                            if (availableOperator != null)
-                            {
-                                _conversationManager.AssignOperator(conversation.ConversationId, availableOperator);
-                                await _hubContext.Clients.Client(availableOperator)
-                                    .SendAsync("NewConversationAssigned", conversation);
-                            }
-                            else
-                            {
-                                await _hubContext.Clients.All
-                                    .SendAsync("NewConversationWaiting", conversation);
-                            }
+                            // ✅ CORREGIDO: Notificar nueva conversación en espera
+                            await _hubContext.Clients.All.SendAsync("ReceiveConversations", 
+                                _conversationManager.GetAllConversations());
+                            
+                            await _hubContext.Clients.All.SendAsync("ConversationStatusChanged", 
+                                conversation.ConversationId, 
+                                (int)conversation.Status);
                         }
                     }
                     else
@@ -239,7 +257,13 @@ public class WebhookController : ControllerBase
                         conversation.Status = ConversationStatus.Waiting;
                         await _whatsAppService.SendMessage(from, "He recibido tu archivo. Un agente te atenderá pronto. 👤");
                         
-                        await _hubContext.Clients.All.SendAsync("NewConversationWaiting", conversation);
+                        // ✅ CORREGIDO: Notificar nueva conversación en espera
+                        await _hubContext.Clients.All.SendAsync("ReceiveConversations", 
+                            _conversationManager.GetAllConversations());
+                        
+                        await _hubContext.Clients.All.SendAsync("ConversationStatusChanged", 
+                            conversation.ConversationId, 
+                            (int)conversation.Status);
                     }
                 }
             }

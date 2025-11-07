@@ -1,9 +1,10 @@
 // operator-login.js
-// Sistema de autenticación de operadores para el panel
+// Sistema de autenticación de operadores para el panel (CORREGIDO)
 
 (function() {
     'use strict';
 
+    
     const OPERATOR_NAME_KEY = 'operatorName';
     
     // Función para obtener el nombre del operador guardado
@@ -273,8 +274,8 @@
         }
     }
     
-    // Manejar login
-    function handleLogin(e) {
+    // ✅ CORREGIDO: Manejar login con mejor sincronización
+    async function handleLogin(e) {
         e.preventDefault();
         hideLoginError();
         
@@ -311,12 +312,34 @@
         // Exponer el nombre globalmente para que SignalR lo use
         window.currentOperatorName = name;
         
-        // Iniciar SignalR si ya está definido
-        if (typeof window.initSignalR === 'function') {
-            console.log('✅ Operador autenticado:', name);
-            window.initSignalR();
-        } else {
-            console.log('⏳ Esperando inicialización de SignalR...');
+        console.log('✅ Operador autenticado:', name);
+        
+        // ✅ CORREGIDO: Iniciar SignalR con el nombre del operador
+        try {
+            if (typeof window.initSignalR === 'function') {
+                await window.initSignalR();
+                console.log('✅ SignalR inicializado correctamente');
+            } else {
+                console.warn('⚠️ Función initSignalR no disponible, esperando...');
+                // Esperar a que initSignalR esté disponible
+                let retries = 0;
+                const maxRetries = 10;
+                const retryInterval = setInterval(() => {
+                    if (typeof window.initSignalR === 'function') {
+                        clearInterval(retryInterval);
+                        window.initSignalR();
+                        console.log('✅ SignalR inicializado (retry)');
+                    } else if (retries >= maxRetries) {
+                        clearInterval(retryInterval);
+                        console.error('❌ No se pudo inicializar SignalR');
+                        showLoginError('Error al inicializar la conexión');
+                    }
+                    retries++;
+                }, 500);
+            }
+        } catch (error) {
+            console.error('❌ Error al inicializar SignalR:', error);
+            showLoginError('Error al conectar con el servidor');
         }
         
         // Resetear botón
@@ -329,16 +352,42 @@
     // Manejar logout
     function handleLogout() {
         if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-            clearOperatorName();
-            window.currentOperatorName = null;
+            console.log('🔴 Cerrando sesión...');
             
-            // Recargar página para reiniciar todo
-            window.location.reload();
+            // ✅ CORREGIDO: Desconectar SignalR antes de limpiar
+            if (window.connection) {
+                window.connection.stop()
+                    .then(() => {
+                        console.log('✅ Conexión SignalR cerrada');
+                        finishLogout();
+                    })
+                    .catch(err => {
+                        console.error('Error al cerrar SignalR:', err);
+                        finishLogout();
+                    });
+            } else {
+                finishLogout();
+            }
         }
     }
     
-    // Inicializar sistema de login
+    // ✅ NUEVO: Función para finalizar el logout
+    function finishLogout() {
+        clearOperatorName();
+        window.currentOperatorName = null;
+        
+        // Recargar página para reiniciar todo
+        window.location.reload();
+    }
+    
+    // ✅ CORREGIDO: Inicializar sistema de login
     function initLoginSystem() {
+        // Verificar si el modal ya existe
+        if (document.getElementById('operatorLoginModal')) {
+            console.log('⚠️ Modal de login ya existe');
+            return;
+        }
+        
         // Crear modal
         createLoginModal();
         
@@ -351,6 +400,9 @@
             window.currentOperatorName = savedName;
             updateOperatorUI(savedName);
             hideLoginModal();
+            
+            // ✅ IMPORTANTE: No llamar a initSignalR aquí
+            // Se debe llamar desde el index.html después de que operator-login.js esté cargado
         } else {
             // Mostrar modal de login
             console.log('⏳ Esperando autenticación de operador...');
@@ -375,12 +427,13 @@
         }
     }
     
-    // Exponer funciones globalmente para que SignalR pueda acceder
+    // Exponer funciones globalmente
     window.getOperatorName = getOperatorName;
     window.setOperatorName = setOperatorName;
     window.clearOperatorName = clearOperatorName;
+    window.handleLogout = handleLogout; // ✅ Exponer para usar desde HTML
     
-    // Inicializar cuando el DOM esté listo
+    // ✅ CORREGIDO: Inicializar cuando el DOM esté listo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initLoginSystem);
     } else {

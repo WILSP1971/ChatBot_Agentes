@@ -1,7 +1,8 @@
 // historia-clinica-modal.js
 // Modal interactivo mejorado para diligenciar historia clínica con diagnósticos en grid
 
-(function() {
+// Esperar a que el DOM esté completamente cargado antes de ejecutar
+document.addEventListener('DOMContentLoaded', function() {
     'use strict';
 
     // Variables globales para diagnósticos
@@ -86,9 +87,15 @@
                 const diagnostico = diagnosticosDisponibles.find(d => d.Codigo === codigo);
                 
                 if (diagnostico) {
-                    document.getElementById('descripcionDiagnostico').value = diagnostico.Descripcion;
+                    const descInput = document.getElementById('descripcionDiagnostico');
+                    if (descInput) {
+                        descInput.value = diagnostico.Descripcion;
+                    }
                 } else {
-                    document.getElementById('descripcionDiagnostico').value = '';
+                    const descInput = document.getElementById('descripcionDiagnostico');
+                    if (descInput) {
+                        descInput.value = '';
+                    }
                 }
             });
         }
@@ -1091,17 +1098,27 @@
         const modal = document.getElementById('historiaClinicaModal');
         const overlay = document.getElementById('hcModalOverlay');
         
+        if (!modal || !overlay) {
+            console.error('Modal elements not found');
+            return;
+        }
+        
         // Cargar datos de listas al abrir el modal por primera vez
         cargarDatosListas();
         
         // Guardar el conversationId en el formulario
-        document.getElementById('historiaClinicaForm').dataset.conversationId = conversationId;
+        const form = document.getElementById('historiaClinicaForm');
+        if (form) {
+            form.dataset.conversationId = conversationId;
+        }
         
         // Pre-llenar datos si están disponibles
         const conversation = window.currentConversation;
         if (conversation) {
-            document.querySelector('[name="telefono"]').value = conversation.phoneNumber || '';
-            document.querySelector('[name="nombrePaciente"]').value = conversation.customerName || '';
+            const telInput = document.querySelector('[name="telefono"]');
+            const nombreInput = document.querySelector('[name="nombrePaciente"]');
+            if (telInput) telInput.value = conversation.phoneNumber || '';
+            if (nombreInput) nombreInput.value = conversation.customerName || '';
         }
         
         modal.classList.add('show');
@@ -1112,6 +1129,8 @@
     window.cerrarHistoriaClinicaModal = function() {
         const modal = document.getElementById('historiaClinicaModal');
         const overlay = document.getElementById('hcModalOverlay');
+        
+        if (!modal || !overlay) return;
         
         modal.classList.remove('show');
         overlay.classList.remove('show');
@@ -1124,6 +1143,8 @@
     // Función global para guardar la historia clínica
     window.guardarHistoriaClinica = async function() {
         const form = document.getElementById('historiaClinicaForm');
+        if (!form) return;
+        
         const formData = new FormData(form);
         
         // Validar campos requeridos
@@ -1145,7 +1166,8 @@
         if (diagnosticosAgregados.length === 0) {
             alert('Debe agregar al menos un diagnóstico');
             // Cambiar a la pestaña de diagnóstico
-            document.querySelector('.hc-tab[data-tab="diagnostico"]').click();
+            const diagTab = document.querySelector('.hc-tab[data-tab="diagnostico"]');
+            if (diagTab) diagTab.click();
             return;
         }
         
@@ -1187,8 +1209,6 @@
             fechaNacimiento: formData.get('fechaNacimiento') || new Date().toISOString(),
             fechaIngreso: new Date().toISOString(),
             horaIngreso: new Date().toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' }),
-            nombreAcompanante: '',
-            parentesco: '',
             motivoConsulta: formData.get('motivoConsulta'),
             enfermedadActual: formData.get('enfermedadActual'),
             antecedentes: antecedentes,
@@ -1206,10 +1226,8 @@
                 torax: formData.get('torax') || '',
                 abdomen: formData.get('abdomen') || '',
                 genitourinario: formData.get('genitourinario') || '',
-                pelvis: '',
                 dorsoExtremidades: formData.get('dorsoExtremidades') || '',
-                snc: formData.get('snc') || '',
-                valor: ''
+                snc: formData.get('snc') || ''
             },
             diagnosticos: diagnosticosAgregados.map(d => ({
                 codigo: d.codigo,
@@ -1255,23 +1273,28 @@
         } catch (error) {
             console.error('Error:', error);
             alert('❌ Error al guardar la historia clínica. Por favor intente nuevamente.');
-            event.target.innerHTML = originalText;
-            event.target.disabled = false;
+            if (event && event.target) {
+                event.target.innerHTML = originalText;
+                event.target.disabled = false;
+            }
         }
     };
 
     // Cerrar modal al hacer clic en el overlay
-    document.getElementById('hcModalOverlay').addEventListener('click', cerrarHistoriaClinicaModal);
+    const overlay = document.getElementById('hcModalOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', cerrarHistoriaClinicaModal);
+    }
 
     // Cerrar con tecla ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') {
             const modal = document.getElementById('historiaClinicaModal');
-            if (modal.classList.contains('show')) {
+            if (modal && modal.classList.contains('show')) {
                 cerrarHistoriaClinicaModal();
             }
         }
     });
 
-    console.log('✅ Modal de Historia Clínica mejorado cargado correctamente');
-})();
+    console.log('✅ Modal de Historia Clínica cargado correctamente');
+});

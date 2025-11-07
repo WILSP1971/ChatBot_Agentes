@@ -666,7 +666,7 @@
         </div>
         <div>
             <span class="status-badge" id="statusBadge">
-                <span id="operatorName">WILSON</span>
+                <span id="operatorName">Cargando...</span>
             </span>
         </div>
     </nav>
@@ -857,7 +857,9 @@
                 document.getElementById('statusBadge').classList.remove('status-offline');
                 document.getElementById('statusBadge').classList.add('status-online');
                 
-                await connection.invoke("RegisterOperator", "WILSON");
+                const operatorName = window.currentOperatorName || window.getOperatorName() || "Operador";
+                await connection.invoke("RegisterOperator", operatorName);
+                console.log('✅ Operador registrado:', operatorName);
             } catch (err) {
                 console.error("❌ SignalR Connection Error:", err);
                 document.getElementById('statusBadge').classList.remove('status-online');
@@ -1187,6 +1189,7 @@
         // Inicializar
         initSignalR();
     </script>
+    <script src="/operator-login.js"></script>
     <script src="/historia-clinica-modal.js"></script>
 </body>
 </html>

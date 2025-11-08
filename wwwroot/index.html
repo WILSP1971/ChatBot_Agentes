@@ -670,8 +670,7 @@
             </span>
         </div>
     </nav>
-
-    
+       
     <!-- Main Container -->
     <div class="main-container">
         <!-- Sidebar: Lista de conversaciones -->
@@ -788,572 +787,572 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.0/signalr.min.js"></script>
     
     <script>
-		// ============================================
-		// JAVASCRIPT CORREGIDO PARA INDEX.HTML
-		// ============================================
-		// Reemplaza todo el contenido del <script> principal con este código
+			// ============================================
+			// JAVASCRIPT CORREGIDO PARA INDEX.HTML
+			// ============================================
+			// Reemplaza todo el contenido del <script> principal con este código
 
-		// Variables globales
-		let connection;
-		let conversations = [];
-		let currentConversationId = null;
-		let selectedFile = null;
-		let selectedFileType = null;
-		let isConnecting = false;
+			// Variables globales
+			let connection;
+			let conversations = [];
+			let currentConversationId = null;
+			let selectedFile = null;
+			let selectedFileType = null;
+			let isConnecting = false;
 
-		// Inicializar tooltips de Bootstrap
-		document.addEventListener('DOMContentLoaded', function() {
-			var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
-			var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
-				return new bootstrap.Tooltip(tooltipTriggerEl)
+			// Inicializar tooltips de Bootstrap
+			document.addEventListener('DOMContentLoaded', function() {
+				var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+				var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+					return new bootstrap.Tooltip(tooltipTriggerEl)
+				});
+				
+				// ✅ CORREGIDO: Inicializar SignalR solo si el operador ya está autenticado
+				const savedOperatorName = window.getOperatorName ? window.getOperatorName() : null;
+				if (savedOperatorName) {
+					console.log('🔄 Inicializando SignalR para operador:', savedOperatorName);
+					window.currentOperatorName = savedOperatorName;
+					// Pequeño delay para asegurar que todo está listo
+					setTimeout(() => {
+						initSignalR();
+					}, 500);
+				} else {
+					console.log('⏳ Esperando autenticación de operador antes de iniciar SignalR');
+				}
 			});
-			
-			// ✅ CORREGIDO: Inicializar SignalR solo si el operador ya está autenticado
-			const savedOperatorName = window.getOperatorName ? window.getOperatorName() : null;
-			if (savedOperatorName) {
-				console.log('🔄 Inicializando SignalR para operador:', savedOperatorName);
-				window.currentOperatorName = savedOperatorName;
-				// Pequeño delay para asegurar que todo está listo
-				setTimeout(() => {
-					initSignalR();
-				}, 500);
-			} else {
-				console.log('⏳ Esperando autenticación de operador antes de iniciar SignalR');
-			}
-		});
 
-		// ✅ CORREGIDO: Inicializar conexión SignalR
-		async function initSignalR() {
-			// Prevenir múltiples inicializaciones simultáneas
-			if (isConnecting) {
-				console.log('⚠️ Ya hay una conexión en progreso...');
-				return;
-			}
-			
-			// Verificar que el operador esté autenticado
-			const operatorName = window.currentOperatorName || (window.getOperatorName ? window.getOperatorName() : null);
-			if (!operatorName) {
-				console.error('❌ No se puede iniciar SignalR: operador no autenticado');
-				return;
-			}
-			
-			isConnecting = true;
-			
-			try {
-				// Si ya hay una conexión activa, cerrarla primero
-				if (connection) {
-					try {
-						await connection.stop();
-						console.log('🔄 Conexión anterior cerrada');
-					} catch (err) {
-						console.warn('Advertencia al cerrar conexión anterior:', err);
-					}
+			// ✅ CORREGIDO: Inicializar conexión SignalR
+			async function initSignalR() {
+				// Prevenir múltiples inicializaciones simultáneas
+				if (isConnecting) {
+					console.log('⚠️ Ya hay una conexión en progreso...');
+					return;
 				}
 				
-				// Crear nueva conexión
-				connection = new signalR.HubConnectionBuilder()
-					.withUrl("/operatorHub")
-					.withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
-					.configureLogging(signalR.LogLevel.Information)
-					.build();
-
-				// ✅ CORREGIDO: Event handlers con nombres consistentes
+				// Verificar que el operador esté autenticado
+				const operatorName = window.currentOperatorName || (window.getOperatorName ? window.getOperatorName() : null);
+				if (!operatorName) {
+					console.error('❌ No se puede iniciar SignalR: operador no autenticado');
+					return;
+				}
 				
-				// Cuando el servidor confirma el registro del operador
-				connection.on("OperatorRegistered", (operatorId, name) => {
-					console.log(`✅ Operador registrado correctamente: ${name} (ID: ${operatorId})`);
+				isConnecting = true;
+				
+				try {
+					// Si ya hay una conexión activa, cerrarla primero
+					if (connection) {
+						try {
+							await connection.stop();
+							console.log('🔄 Conexión anterior cerrada');
+						} catch (err) {
+							console.warn('Advertencia al cerrar conexión anterior:', err);
+						}
+					}
+					
+					// Crear nueva conexión
+					connection = new signalR.HubConnectionBuilder()
+						.withUrl("/operatorHub")
+						.withAutomaticReconnect([0, 2000, 5000, 10000, 30000])
+						.configureLogging(signalR.LogLevel.Information)
+						.build();
+
+					// ✅ CORREGIDO: Event handlers con nombres consistentes
+					
+					// Cuando el servidor confirma el registro del operador
+					connection.on("OperatorRegistered", (operatorId, name) => {
+						console.log(`✅ Operador registrado correctamente: ${name} (ID: ${operatorId})`);
+						updateOperatorStatus(true);
+					});
+
+					// Cuando se reciben conversaciones
+					connection.on("ReceiveConversations", (conversationsList) => {
+						console.log(`📋 Recibidas ${conversationsList.length} conversaciones`);
+						conversations = conversationsList;
+						displayConversations();
+						updateWaitingCount();
+					});
+
+					// Cuando llega un nuevo mensaje
+					connection.on("NewMessage", (message) => {
+						console.log('💬 Nuevo mensaje recibido:', message);
+						
+						// Buscar la conversación y agregar el mensaje
+						const conversation = conversations.find(c => c.conversationId === message.conversationId);
+						if (conversation) {
+							conversation.messages.push(message);
+						}
+						
+						// Si estamos viendo esta conversación, mostrar el mensaje
+						if (message.conversationId === currentConversationId) {
+							displayMessage(message);
+						}
+						
+						updateConversationPreview(message.conversationId, message.content);
+						
+						// Reproducir sonido si el mensaje no es de la conversación actual
+						if (message.conversationId !== currentConversationId && message.type === 0) {
+							playNotificationSound();
+						}
+					});
+
+					// Cuando se asigna una conversación al operador actual
+					connection.on("ConversationAssigned", (conversation) => {
+						console.log('✅ Conversación asignada:', conversation.conversationId);
+						
+						// Actualizar o agregar la conversación
+						const index = conversations.findIndex(c => c.conversationId === conversation.conversationId);
+						if (index >= 0) {
+							conversations[index] = conversation;
+						} else {
+							conversations.push(conversation);
+						}
+						
+						displayConversations();
+						updateWaitingCount();
+					});
+
+					// Cuando otro operador toma una conversación
+					connection.on("ConversationTaken", (conversationId) => {
+						console.log('👤 Otro operador tomó la conversación:', conversationId);
+						
+						const conversation = conversations.find(c => c.conversationId === conversationId);
+						if (conversation) {
+							conversation.status = 2; // Active
+							displayConversations();
+							updateWaitingCount();
+						}
+					});
+
+					// Cuando cambia el estado de una conversación
+					connection.on("ConversationStatusChanged", (conversationId, status) => {
+						console.log(`🔄 Estado de conversación ${conversationId} cambió a:`, status);
+						
+						const conversation = conversations.find(c => c.conversationId === conversationId);
+						if (conversation) {
+							conversation.status = status;
+							displayConversations();
+							updateWaitingCount();
+						}
+					});
+
+					// Cuando se cierra una conversación
+					connection.on("ConversationClosed", (conversationId) => {
+						console.log('🔴 Conversación cerrada:', conversationId);
+						
+						conversations = conversations.filter(c => c.conversationId !== conversationId);
+						displayConversations();
+						updateWaitingCount();
+						
+						if (conversationId === currentConversationId) {
+							currentConversationId = null;
+							document.getElementById('chatHeader').style.display = 'none';
+							document.getElementById('messagesArea').innerHTML = `
+								<div class="empty-state">
+									<i class="bi bi-chat-left-text"></i>
+									<p>Selecciona una conversación para comenzar</p>
+								</div>
+							`;
+						}
+					});
+
+					// Cuando una conversación se devuelve al bot
+					connection.on("ConversationReleasedToBot", (conversationId) => {
+						console.log('🤖 Conversación devuelta al bot:', conversationId);
+						
+						const conversation = conversations.find(c => c.conversationId === conversationId);
+						if (conversation) {
+							conversation.status = 3; // BotHandling
+							displayConversations();
+							updateWaitingCount();
+						}
+						
+						if (conversationId === currentConversationId) {
+							currentConversationId = null;
+							document.getElementById('chatHeader').style.display = 'none';
+							document.getElementById('messagesArea').innerHTML = `
+								<div class="empty-state">
+									<i class="bi bi-chat-left-text"></i>
+									<p>Conversación devuelta al bot</p>
+								</div>
+							`;
+						}
+					});
+
+					// ✅ Handlers de reconexión
+					connection.onreconnecting((error) => {
+						console.warn('🔄 Reconectando SignalR...', error);
+						updateOperatorStatus(false);
+					});
+
+					connection.onreconnected((connectionId) => {
+						console.log('✅ SignalR reconectado! ID:', connectionId);
+						updateOperatorStatus(true);
+						
+						// ✅ IMPORTANTE: Re-registrar operador después de reconectar
+						const operatorName = window.currentOperatorName || (window.getOperatorName ? window.getOperatorName() : null);
+						if (operatorName) {
+							connection.invoke("RegisterOperator", operatorName)
+								.then(() => {
+									console.log('✅ Operador re-registrado después de reconexión');
+									// Solicitar todas las conversaciones
+									return connection.invoke("RequestAllConversations");
+								})
+								.catch(err => console.error('Error al re-registrar operador:', err));
+						}
+					});
+
+					connection.onclose((error) => {
+						console.error('❌ Conexión SignalR cerrada:', error);
+						updateOperatorStatus(false);
+						isConnecting = false;
+					});
+
+					// ✅ Iniciar conexión
+					await connection.start();
+					console.log("✅ SignalR Conectado!");
 					updateOperatorStatus(true);
-				});
-
-				// Cuando se reciben conversaciones
-				connection.on("ReceiveConversations", (conversationsList) => {
-					console.log(`📋 Recibidas ${conversationsList.length} conversaciones`);
-					conversations = conversationsList;
-					displayConversations();
-					updateWaitingCount();
-				});
-
-				// Cuando llega un nuevo mensaje
-				connection.on("NewMessage", (message) => {
-					console.log('💬 Nuevo mensaje recibido:', message);
 					
-					// Buscar la conversación y agregar el mensaje
-					const conversation = conversations.find(c => c.conversationId === message.conversationId);
-					if (conversation) {
-						conversation.messages.push(message);
-					}
+					// ✅ IMPORTANTE: Registrar operador inmediatamente después de conectar
+					await connection.invoke("RegisterOperator", operatorName);
+					console.log('✅ Operador registrado:', operatorName);
 					
-					// Si estamos viendo esta conversación, mostrar el mensaje
-					if (message.conversationId === currentConversationId) {
-						displayMessage(message);
-					}
+					isConnecting = false;
 					
-					updateConversationPreview(message.conversationId, message.content);
-					
-					// Reproducir sonido si el mensaje no es de la conversación actual
-					if (message.conversationId !== currentConversationId && message.type === 0) {
-						playNotificationSound();
-					}
-				});
-
-				// Cuando se asigna una conversación al operador actual
-				connection.on("ConversationAssigned", (conversation) => {
-					console.log('✅ Conversación asignada:', conversation.conversationId);
-					
-					// Actualizar o agregar la conversación
-					const index = conversations.findIndex(c => c.conversationId === conversation.conversationId);
-					if (index >= 0) {
-						conversations[index] = conversation;
-					} else {
-						conversations.push(conversation);
-					}
-					
-					displayConversations();
-					updateWaitingCount();
-				});
-
-				// Cuando otro operador toma una conversación
-				connection.on("ConversationTaken", (conversationId) => {
-					console.log('👤 Otro operador tomó la conversación:', conversationId);
-					
-					const conversation = conversations.find(c => c.conversationId === conversationId);
-					if (conversation) {
-						conversation.status = 2; // Active
-						displayConversations();
-						updateWaitingCount();
-					}
-				});
-
-				// Cuando cambia el estado de una conversación
-				connection.on("ConversationStatusChanged", (conversationId, status) => {
-					console.log(`🔄 Estado de conversación ${conversationId} cambió a:`, status);
-					
-					const conversation = conversations.find(c => c.conversationId === conversationId);
-					if (conversation) {
-						conversation.status = status;
-						displayConversations();
-						updateWaitingCount();
-					}
-				});
-
-				// Cuando se cierra una conversación
-				connection.on("ConversationClosed", (conversationId) => {
-					console.log('🔴 Conversación cerrada:', conversationId);
-					
-					conversations = conversations.filter(c => c.conversationId !== conversationId);
-					displayConversations();
-					updateWaitingCount();
-					
-					if (conversationId === currentConversationId) {
-						currentConversationId = null;
-						document.getElementById('chatHeader').style.display = 'none';
-						document.getElementById('messagesArea').innerHTML = `
-							<div class="empty-state">
-								<i class="bi bi-chat-left-text"></i>
-								<p>Selecciona una conversación para comenzar</p>
-							</div>
-						`;
-					}
-				});
-
-				// Cuando una conversación se devuelve al bot
-				connection.on("ConversationReleasedToBot", (conversationId) => {
-					console.log('🤖 Conversación devuelta al bot:', conversationId);
-					
-					const conversation = conversations.find(c => c.conversationId === conversationId);
-					if (conversation) {
-						conversation.status = 3; // BotHandling
-						displayConversations();
-						updateWaitingCount();
-					}
-					
-					if (conversationId === currentConversationId) {
-						currentConversationId = null;
-						document.getElementById('chatHeader').style.display = 'none';
-						document.getElementById('messagesArea').innerHTML = `
-							<div class="empty-state">
-								<i class="bi bi-chat-left-text"></i>
-								<p>Conversación devuelta al bot</p>
-							</div>
-						`;
-					}
-				});
-
-				// ✅ Handlers de reconexión
-				connection.onreconnecting((error) => {
-					console.warn('🔄 Reconectando SignalR...', error);
-					updateOperatorStatus(false);
-				});
-
-				connection.onreconnected((connectionId) => {
-					console.log('✅ SignalR reconectado! ID:', connectionId);
-					updateOperatorStatus(true);
-					
-					// ✅ IMPORTANTE: Re-registrar operador después de reconectar
-					const operatorName = window.currentOperatorName || (window.getOperatorName ? window.getOperatorName() : null);
-					if (operatorName) {
-						connection.invoke("RegisterOperator", operatorName)
-							.then(() => {
-								console.log('✅ Operador re-registrado después de reconexión');
-								// Solicitar todas las conversaciones
-								return connection.invoke("RequestAllConversations");
-							})
-							.catch(err => console.error('Error al re-registrar operador:', err));
-					}
-				});
-
-				connection.onclose((error) => {
-					console.error('❌ Conexión SignalR cerrada:', error);
+				} catch (err) {
+					console.error("❌ Error al conectar SignalR:", err);
 					updateOperatorStatus(false);
 					isConnecting = false;
-				});
-
-				// ✅ Iniciar conexión
-				await connection.start();
-				console.log("✅ SignalR Conectado!");
-				updateOperatorStatus(true);
-				
-				// ✅ IMPORTANTE: Registrar operador inmediatamente después de conectar
-				await connection.invoke("RegisterOperator", operatorName);
-				console.log('✅ Operador registrado:', operatorName);
-				
-				isConnecting = false;
-				
-			} catch (err) {
-				console.error("❌ Error al conectar SignalR:", err);
-				updateOperatorStatus(false);
-				isConnecting = false;
-				
-				// Reintentar después de 5 segundos
-				setTimeout(() => {
-					console.log('🔄 Reintentando conexión...');
-					initSignalR();
-				}, 5000);
-			}
-		}
-
-		// ✅ NUEVO: Función para actualizar el estado visual del operador
-		function updateOperatorStatus(isOnline) {
-			const statusBadge = document.getElementById('statusBadge');
-			if (statusBadge) {
-				if (isOnline) {
-					statusBadge.classList.remove('status-offline');
-					statusBadge.classList.add('status-online');
-				} else {
-					statusBadge.classList.remove('status-online');
-					statusBadge.classList.add('status-offline');
-				}
-			}
-		}
-
-		// Exponer initSignalR globalmente para que operator-login.js pueda llamarla
-		window.initSignalR = initSignalR;
-
-		// Mostrar conversaciones en el sidebar
-		function displayConversations() {
-			const container = document.getElementById('conversationsList');
-			
-			if (conversations.length === 0) {
-				container.innerHTML = `
-					<div class="empty-conversations">
-						<i class="bi bi-inbox"></i>
-						<p><strong>No hay conversaciones activas</strong></p>
-						<p>Las conversaciones aparecerán aquí</p>
-					</div>
-				`;
-				return;
-			}
-
-			container.innerHTML = conversations.map(conv => {
-				const isActive = conv.conversationId === currentConversationId;
-				const isWaiting = conv.status === 1; // Waiting
-				const statusClass = isWaiting ? 'waiting' : '';
-				const activeClass = isActive ? 'active' : '';
-				const lastMessage = conv.messages[conv.messages.length - 1];
-				const preview = lastMessage ? lastMessage.content.substring(0, 50) : 'Sin mensajes';
-				const time = lastMessage ? formatTime(lastMessage.timestamp) : '';
-				const initial = conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?';
-
-				return `
-					<div class="conversation-item ${statusClass} ${activeClass}" 
-						 data-conversation-id="${conv.conversationId}"
-						 onclick="selectConversation('${conv.conversationId}')">
-						<div class="conversation-name">
-							<span><i class="bi bi-person-circle"></i> ${conv.customerName || 'Cliente'}</span>
-							${isWaiting ? '<i class="bi bi-clock-history text-warning"></i>' : ''}
-						</div>
-						<div class="conversation-phone">
-							<i class="bi bi-telephone"></i> ${conv.phoneNumber}
-						</div>
-						<div class="conversation-preview">${preview}...</div>
-						<div class="conversation-time">${time}</div>
-					</div>
-				`;
-			}).join('');
-		}
-
-		// Seleccionar conversación
-		async function selectConversation(conversationId) {
-			currentConversationId = conversationId;
-			const conversation = conversations.find(c => c.conversationId === conversationId);
-			
-			if (!conversation) return;
-
-			window.currentConversation = conversation;
-
-			try {
-				await connection.invoke("TakeConversation", conversationId);
-			} catch (error) {
-				console.error('Error al tomar conversación:', error);
-			}
-
-			const initial = conversation.customerName ? conversation.customerName.charAt(0).toUpperCase() : '?';
-			
-			document.getElementById('chatHeader').style.display = 'block';
-			document.getElementById('customerAvatar').innerHTML = `<span>${initial}</span>`;
-			document.getElementById('customerName').textContent = conversation.customerName || 'Cliente';
-			document.getElementById('customerPhone').textContent = conversation.phoneNumber;
-			
-			document.getElementById('messageInput').disabled = false;
-			document.getElementById('sendBtn').disabled = false;
-			document.getElementById('closeConversationBtn').style.display = 'block';
-			document.getElementById('releaseToBotBtn').style.display = 'block';
-			document.getElementById('imageBtn').disabled = false;
-			document.getElementById('documentBtn').disabled = false;
-			document.getElementById('videoCallBtn').disabled = false;
-			document.getElementById('medicalRecordBtn').disabled = false;
-
-			displayMessages(conversation.messages);
-			displayConversations();
-		}
-
-		function displayMessages(messages) {
-			const messagesArea = document.getElementById('messagesArea');
-			messagesArea.innerHTML = '';
-
-			messages.forEach(message => {
-				displayMessage(message);
-			});
-
-			scrollToBottom();
-		}
-
-		function displayMessage(message) {
-			const messagesArea = document.getElementById('messagesArea');
-			
-			let messageClass = 'customer';
-			let senderName = message.sender;
-			
-			if (message.type === 1) {
-				messageClass = 'operator';
-			} else if (message.type === 2) {
-				messageClass = 'bot';
-				senderName = '🤖 ' + senderName;
-			}
-
-			let contentHtml = escapeHtml(message.content);
-			
-			if (message.mediaUrl) {
-				if (message.mediaType === 'image') {
-					contentHtml += `<br><img src="${message.mediaUrl}" class="media-preview" alt="Imagen">`;
-				} else if (message.mediaType === 'document') {
-					contentHtml += `<br><i class="bi bi-file-earmark"></i> <a href="${message.mediaUrl}" target="_blank">Ver documento</a>`;
-				} else if (message.mediaType === 'video_call') {
-					contentHtml += `<br><a href="${message.mediaUrl}" target="_blank" class="btn btn-sm btn-primary mt-2">
-						<i class="bi bi-camera-video"></i> Abrir videollamada
-					</a>`;
+					
+					// Reintentar después de 5 segundos
+					setTimeout(() => {
+						console.log('🔄 Reintentando conexión...');
+						initSignalR();
+					}, 5000);
 				}
 			}
 
-			const messageHtml = `
-				<div class="message ${messageClass}">
-					<div class="message-bubble">
-						<div class="message-sender">${senderName}</div>
-						<div class="message-content">${contentHtml}</div>
-						<div class="message-time">${formatTime(message.timestamp)}</div>
-					</div>
-				</div>
-			`;
-
-			messagesArea.insertAdjacentHTML('beforeend', messageHtml);
-			scrollToBottom();
-		}
-
-		async function sendMessage() {
-			if (!currentConversationId) return;
-
-			const messageInput = document.getElementById('messageInput');
-			const message = messageInput.value.trim();
-
-			if (selectedFile) {
-				await sendFile();
-				return;
+			// ✅ NUEVO: Función para actualizar el estado visual del operador
+			function updateOperatorStatus(isOnline) {
+				const statusBadge = document.getElementById('statusBadge');
+				if (statusBadge) {
+					if (isOnline) {
+						statusBadge.classList.remove('status-offline');
+						statusBadge.classList.add('status-online');
+					} else {
+						statusBadge.classList.remove('status-online');
+						statusBadge.classList.add('status-offline');
+					}
+				}
 			}
 
-			if (!message) return;
+			// Exponer initSignalR globalmente para que operator-login.js pueda llamarla
+			window.initSignalR = initSignalR;
 
-			try {
-				await connection.invoke("SendMessageToCustomer", currentConversationId, message);
-				messageInput.value = '';
-				messageInput.focus();
-			} catch (error) {
-				console.error('Error al enviar mensaje:', error);
-				alert('Error al enviar el mensaje');
-			}
-		}
-
-		function handleImageSelect(e) {
-			const file = e.target.files[0];
-			if (file) {
-				selectedFile = file;
-				selectedFileType = 'image';
-				document.getElementById('fileName').textContent = `🖼️ ${file.name}`;
-				document.getElementById('filePreview').style.display = 'flex';
-			}
-		}
-
-		function handleDocumentSelect(e) {
-			const file = e.target.files[0];
-			if (file) {
-				selectedFile = file;
-				selectedFileType = 'document';
-				document.getElementById('fileName').textContent = `📄 ${file.name}`;
-				document.getElementById('filePreview').style.display = 'flex';
-			}
-		}
-
-		function clearFileSelection() {
-			selectedFile = null;
-			selectedFileType = null;
-			document.getElementById('imageInput').value = '';
-			document.getElementById('documentInput').value = '';
-			document.getElementById('filePreview').style.display = 'none';
-		}
-
-		async function sendFile() {
-			if (!selectedFile || !currentConversationId) return;
-
-			try {
-				const messageInput = document.getElementById('messageInput');
-				const caption = messageInput.value.trim() || null;
+			// Mostrar conversaciones en el sidebar
+			function displayConversations() {
+				const container = document.getElementById('conversationsList');
 				
-				const formData = new FormData();
-				formData.append('file', selectedFile);
-
-				const endpoint = selectedFileType === 'image' ? '/api/upload/image' : '/api/upload/document';
-				const uploadResponse = await fetch(endpoint, {
-					method: 'POST',
-					body: formData
-				});
-
-				if (!uploadResponse.ok) {
-					const error = await uploadResponse.json();
-					alert(`Error: ${error.message || 'No se pudo subir el archivo'}`);
+				if (conversations.length === 0) {
+					container.innerHTML = `
+						<div class="empty-conversations">
+							<i class="bi bi-inbox"></i>
+							<p><strong>No hay conversaciones activas</strong></p>
+							<p>Las conversaciones aparecerán aquí</p>
+						</div>
+					`;
 					return;
 				}
 
-				const uploadResult = await uploadResponse.json();
+				container.innerHTML = conversations.map(conv => {
+					const isActive = conv.conversationId === currentConversationId;
+					const isWaiting = conv.status === 1; // Waiting
+					const statusClass = isWaiting ? 'waiting' : '';
+					const activeClass = isActive ? 'active' : '';
+					const lastMessage = conv.messages[conv.messages.length - 1];
+					const preview = lastMessage ? lastMessage.content.substring(0, 50) : 'Sin mensajes';
+					const time = lastMessage ? formatTime(lastMessage.timestamp) : '';
+					const initial = conv.customerName ? conv.customerName.charAt(0).toUpperCase() : '?';
+
+					return `
+						<div class="conversation-item ${statusClass} ${activeClass}" 
+							 data-conversation-id="${conv.conversationId}"
+							 onclick="selectConversation('${conv.conversationId}')">
+							<div class="conversation-name">
+								<span><i class="bi bi-person-circle"></i> ${conv.customerName || 'Cliente'}</span>
+								${isWaiting ? '<i class="bi bi-clock-history text-warning"></i>' : ''}
+							</div>
+							<div class="conversation-phone">
+								<i class="bi bi-telephone"></i> ${conv.phoneNumber}
+							</div>
+							<div class="conversation-preview">${preview}...</div>
+							<div class="conversation-time">${time}</div>
+						</div>
+					`;
+				}).join('');
+			}
+
+			// Seleccionar conversación
+			async function selectConversation(conversationId) {
+				currentConversationId = conversationId;
+				const conversation = conversations.find(c => c.conversationId === conversationId);
 				
-				if (uploadResult.success && uploadResult.url) {
-					if (selectedFileType === 'image') {
-						await connection.invoke("SendImageToCustomer", currentConversationId, uploadResult.url, caption);
-					} else if (selectedFileType === 'document') {
-						await connection.invoke("SendDocumentToCustomer", 
-							currentConversationId, 
-							uploadResult.url, 
-							uploadResult.filename || selectedFile.name, 
-							caption);
+				if (!conversation) return;
+
+				window.currentConversation = conversation;
+
+				try {
+					await connection.invoke("TakeConversation", conversationId);
+				} catch (error) {
+					console.error('Error al tomar conversación:', error);
+				}
+
+				const initial = conversation.customerName ? conversation.customerName.charAt(0).toUpperCase() : '?';
+				
+				document.getElementById('chatHeader').style.display = 'block';
+				document.getElementById('customerAvatar').innerHTML = `<span>${initial}</span>`;
+				document.getElementById('customerName').textContent = conversation.customerName || 'Cliente';
+				document.getElementById('customerPhone').textContent = conversation.phoneNumber;
+				
+				document.getElementById('messageInput').disabled = false;
+				document.getElementById('sendBtn').disabled = false;
+				document.getElementById('closeConversationBtn').style.display = 'block';
+				document.getElementById('releaseToBotBtn').style.display = 'block';
+				document.getElementById('imageBtn').disabled = false;
+				document.getElementById('documentBtn').disabled = false;
+				document.getElementById('videoCallBtn').disabled = false;
+				document.getElementById('medicalRecordBtn').disabled = false;
+
+				displayMessages(conversation.messages);
+				displayConversations();
+			}
+
+			function displayMessages(messages) {
+				const messagesArea = document.getElementById('messagesArea');
+				messagesArea.innerHTML = '';
+
+				messages.forEach(message => {
+					displayMessage(message);
+				});
+
+				scrollToBottom();
+			}
+
+			function displayMessage(message) {
+				const messagesArea = document.getElementById('messagesArea');
+				
+				let messageClass = 'customer';
+				let senderName = message.sender;
+				
+				if (message.type === 1) {
+					messageClass = 'operator';
+				} else if (message.type === 2) {
+					messageClass = 'bot';
+					senderName = '🤖 ' + senderName;
+				}
+
+				let contentHtml = escapeHtml(message.content);
+				
+				if (message.mediaUrl) {
+					if (message.mediaType === 'image') {
+						contentHtml += `<br><img src="${message.mediaUrl}" class="media-preview" alt="Imagen">`;
+					} else if (message.mediaType === 'document') {
+						contentHtml += `<br><i class="bi bi-file-earmark"></i> <a href="${message.mediaUrl}" target="_blank">Ver documento</a>`;
+					} else if (message.mediaType === 'video_call') {
+						contentHtml += `<br><a href="${message.mediaUrl}" target="_blank" class="btn btn-sm btn-primary mt-2">
+							<i class="bi bi-camera-video"></i> Abrir videollamada
+						</a>`;
+					}
+				}
+
+				const messageHtml = `
+					<div class="message ${messageClass}">
+						<div class="message-bubble">
+							<div class="message-sender">${senderName}</div>
+							<div class="message-content">${contentHtml}</div>
+							<div class="message-time">${formatTime(message.timestamp)}</div>
+						</div>
+					</div>
+				`;
+
+				messagesArea.insertAdjacentHTML('beforeend', messageHtml);
+				scrollToBottom();
+			}
+
+			async function sendMessage() {
+				if (!currentConversationId) return;
+
+				const messageInput = document.getElementById('messageInput');
+				const message = messageInput.value.trim();
+
+				if (selectedFile) {
+					await sendFile();
+					return;
+				}
+
+				if (!message) return;
+
+				try {
+					await connection.invoke("SendMessageToCustomer", currentConversationId, message);
+					messageInput.value = '';
+					messageInput.focus();
+				} catch (error) {
+					console.error('Error al enviar mensaje:', error);
+					alert('Error al enviar el mensaje');
+				}
+			}
+
+			function handleImageSelect(e) {
+				const file = e.target.files[0];
+				if (file) {
+					selectedFile = file;
+					selectedFileType = 'image';
+					document.getElementById('fileName').textContent = `🖼️ ${file.name}`;
+					document.getElementById('filePreview').style.display = 'flex';
+				}
+			}
+
+			function handleDocumentSelect(e) {
+				const file = e.target.files[0];
+				if (file) {
+					selectedFile = file;
+					selectedFileType = 'document';
+					document.getElementById('fileName').textContent = `📄 ${file.name}`;
+					document.getElementById('filePreview').style.display = 'flex';
+				}
+			}
+
+			function clearFileSelection() {
+				selectedFile = null;
+				selectedFileType = null;
+				document.getElementById('imageInput').value = '';
+				document.getElementById('documentInput').value = '';
+				document.getElementById('filePreview').style.display = 'none';
+			}
+
+			async function sendFile() {
+				if (!selectedFile || !currentConversationId) return;
+
+				try {
+					const messageInput = document.getElementById('messageInput');
+					const caption = messageInput.value.trim() || null;
+					
+					const formData = new FormData();
+					formData.append('file', selectedFile);
+
+					const endpoint = selectedFileType === 'image' ? '/api/upload/image' : '/api/upload/document';
+					const uploadResponse = await fetch(endpoint, {
+						method: 'POST',
+						body: formData
+					});
+
+					if (!uploadResponse.ok) {
+						const error = await uploadResponse.json();
+						alert(`Error: ${error.message || 'No se pudo subir el archivo'}`);
+						return;
 					}
 
-					messageInput.value = '';
-					clearFileSelection();
-					console.log('✅ Archivo enviado correctamente');
-				} else {
-					alert('Error al procesar el archivo');
-				}
-			} catch (error) {
-				console.error('Error al enviar archivo:', error);
-				alert('Error al enviar el archivo. Por favor intenta nuevamente.');
-			}
-		}
+					const uploadResult = await uploadResponse.json();
+					
+					if (uploadResult.success && uploadResult.url) {
+						if (selectedFileType === 'image') {
+							await connection.invoke("SendImageToCustomer", currentConversationId, uploadResult.url, caption);
+						} else if (selectedFileType === 'document') {
+							await connection.invoke("SendDocumentToCustomer", 
+								currentConversationId, 
+								uploadResult.url, 
+								uploadResult.filename || selectedFile.name, 
+								caption);
+						}
 
-		async function releaseToBot() {
-			if (!currentConversationId) return;
-
-			if (confirm('¿Estás seguro de devolver esta conversación al bot? El bot continuará atendiendo al cliente automáticamente.')) {
-				try {
-					await connection.invoke("ReleaseConversationToBot", currentConversationId);
-					console.log('✅ Conversación devuelta al bot');
+						messageInput.value = '';
+						clearFileSelection();
+						console.log('✅ Archivo enviado correctamente');
+					} else {
+						alert('Error al procesar el archivo');
+					}
 				} catch (error) {
-					console.error('Error al devolver al bot:', error);
-					alert('Error al devolver la conversación al bot');
+					console.error('Error al enviar archivo:', error);
+					alert('Error al enviar el archivo. Por favor intenta nuevamente.');
 				}
 			}
-		}
 
-		async function closeConversation() {
-			if (!currentConversationId) return;
+			async function releaseToBot() {
+				if (!currentConversationId) return;
 
-			if (confirm('¿Estás seguro de cerrar esta conversación?')) {
-				try {
-					await connection.invoke("CloseConversation", currentConversationId);
-					console.log('✅ Conversación cerrada');
-				} catch (error) {
-					console.error('Error al cerrar conversación:', error);
-					alert('Error al cerrar la conversación');
+				if (confirm('¿Estás seguro de devolver esta conversación al bot? El bot continuará atendiendo al cliente automáticamente.')) {
+					try {
+						await connection.invoke("ReleaseConversationToBot", currentConversationId);
+						console.log('✅ Conversación devuelta al bot');
+					} catch (error) {
+						console.error('Error al devolver al bot:', error);
+						alert('Error al devolver la conversación al bot');
+					}
 				}
 			}
-		}
 
-		async function sendVideoCall() {
-			if (!currentConversationId) return;
+			async function closeConversation() {
+				if (!currentConversationId) return;
 
-			if (confirm('¿Deseas enviar una invitación de videollamada al cliente?')) {
-				try {
-					await connection.invoke("SendVideoCallToCustomer", currentConversationId);
-					console.log('✅ Invitación de videollamada enviada');
-				} catch (error) {
-					console.error('Error al enviar videollamada:', error);
-					alert('Error al enviar la invitación de videollamada');
+				if (confirm('¿Estás seguro de cerrar esta conversación?')) {
+					try {
+						await connection.invoke("CloseConversation", currentConversationId);
+						console.log('✅ Conversación cerrada');
+					} catch (error) {
+						console.error('Error al cerrar conversación:', error);
+						alert('Error al cerrar la conversación');
+					}
 				}
 			}
-		}
 
-		function updateWaitingCount() {
-			const waitingCount = document.querySelectorAll('.conversation-item.waiting').length;
-			document.getElementById('waitingCount').textContent = waitingCount;
-		}
+			async function sendVideoCall() {
+				if (!currentConversationId) return;
 
-		function formatTime(timestamp) {
-			const date = new Date(timestamp);
-			return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-		}
-
-		function escapeHtml(text) {
-			const div = document.createElement('div');
-			div.textContent = text;
-			return div.innerHTML;
-		}
-
-		function scrollToBottom() {
-			const messagesArea = document.getElementById('messagesArea');
-			messagesArea.scrollTop = messagesArea.scrollHeight;
-		}
-
-		function playNotificationSound() {
-			const audio = document.getElementById('notificationSound');
-			audio.play().catch(e => console.log('No se pudo reproducir sonido'));
-		}
-
-		function updateConversationPreview(conversationId, messageText) {
-			const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
-			if (element) {
-				const preview = element.querySelector('.conversation-preview');
-				if (preview) {
-					preview.textContent = messageText.substring(0, 50) + '...';
+				if (confirm('¿Deseas enviar una invitación de videollamada al cliente?')) {
+					try {
+						await connection.invoke("SendVideoCallToCustomer", currentConversationId);
+						console.log('✅ Invitación de videollamada enviada');
+					} catch (error) {
+						console.error('Error al enviar videollamada:', error);
+						alert('Error al enviar la invitación de videollamada');
+					}
 				}
 			}
-		}
+
+			function updateWaitingCount() {
+				const waitingCount = document.querySelectorAll('.conversation-item.waiting').length;
+				document.getElementById('waitingCount').textContent = waitingCount;
+			}
+
+			function formatTime(timestamp) {
+				const date = new Date(timestamp);
+				return date.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+			}
+
+			function escapeHtml(text) {
+				const div = document.createElement('div');
+				div.textContent = text;
+				return div.innerHTML;
+			}
+
+			function scrollToBottom() {
+				const messagesArea = document.getElementById('messagesArea');
+				messagesArea.scrollTop = messagesArea.scrollHeight;
+			}
+
+			function playNotificationSound() {
+				const audio = document.getElementById('notificationSound');
+				audio.play().catch(e => console.log('No se pudo reproducir sonido'));
+			}
+
+			function updateConversationPreview(conversationId, messageText) {
+				const element = document.querySelector(`[data-conversation-id="${conversationId}"]`);
+				if (element) {
+					const preview = element.querySelector('.conversation-preview');
+					if (preview) {
+						preview.textContent = messageText.substring(0, 50) + '...';
+					}
+				}
+			}
 
     </script>
     <script src="operator-login.js"></script>

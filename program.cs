@@ -48,8 +48,9 @@ app.UseAuthorization();
 
 app.MapControllers();
 app.MapHub<ChatHub>("/operatorHub");
-Console.WriteLine("✅ Aplicación iniciada correctamente");
 Console.WriteLine("✅ SignalR Hub disponible en: /operatorHub");
+
+Console.WriteLine("✅ Aplicación iniciada correctamente");
 
 app.Run();
 
@@ -136,6 +137,1088 @@ public class ListRow
     public string Description { get; set; } = "";
 }
 
+// ============================================
+// MODELOS DE API
+// ============================================
+
+public class Paciente
+{
+    public string NoCaso { get; set; } = "";
+    public string NoIdentificacion { get; set; } = "";
+    public string NombrePaciente { get; set; } = "";
+    public string ApellidoPaciente { get; set; } = "";
+    public string DatosPaciente { get; set; } = "";
+}
+
+public class NuevoPaciente
+{
+    public string Id { get; set; } = "";
+    public string Nombre { get; set; } = "";
+    public string Documento { get; set; } = "";
+    public string Telefono { get; set; } = "";
+    public string Email { get; set; } = "";
+    public DateTime FechaNacimiento { get; set; }
+}
+
+public class Cita
+{
+    public string Fecha { get; set; } = "";
+    public string Hora { get; set; } = "";
+    public string CodServicio { get; set; } = "";
+    public decimal consecutivo { get; set; }
+    public string citaControl { get; set; } = "";
+    public string Observacion { get; set; } = "";
+    public string CedulaMedico { get; set; } = "";
+    public string Medico { get; set; } = "";
+    public string Paciente { get; set; } = "";
+    public string NoIdentificacion { get; set; } = "";
+}
+
+public class NuevaCita
+{
+    public string Id { get; set; } = "";
+    public string PacienteId { get; set; } = "";
+    public string PacienteNombre { get; set; } = "";
+    public DateTime FechaHora { get; set; }
+    public string Especialidad { get; set; } = "";
+    public string Doctor { get; set; } = "";
+    public string Estado { get; set; } = "";
+}
+public class HistoriaClinica
+{
+    public string PacienteId { get; set; } = "";
+    public string Documento { get; set; } = "";
+    public string NombreCompleto { get; set; } = "";
+    public DateTime FechaNacimiento { get; set; }
+    public string Direccion { get; set; } = "";
+    public string Telefono { get; set; } = "";
+    public string Email { get; set; } = "";
+    public string TipoSangre { get; set; } = "";
+    public List<string> Alergias { get; set; } = new();
+}
+
+// ============================================
+// SERVICIO DE INTEGRACIÓN CON API
+// ============================================
+
+public class ApiIntegrationService
+{
+    private readonly IConfiguration _configuration;
+    private readonly IHttpClientFactory _httpClientFactory;
+    private readonly string _baseUrl;
+    private readonly string _codigoEmpresa;
+    //private readonly string _apiKey;
+
+    public ApiIntegrationService(IConfiguration configuration, IHttpClientFactory httpClientFactory)
+    {
+        _configuration = configuration;
+        _httpClientFactory = httpClientFactory;
+        _baseUrl = _configuration["ApiSettings:BaseUrl"] ?? "";
+        _codigoEmpresa = _configuration["ApiSettings:CodigoEmpresa"] ?? "C30";
+
+        //_apiKey = _configuration["ApiSettings:ApiKey"] ?? "";
+    }
+
+    private HttpClient CreateClient()
+    {
+        var client = _httpClientFactory.CreateClient();
+        client.BaseAddress = new Uri(_baseUrl);
+        //client.DefaultRequestHeaders.Add("X-API-Key", _apiKey);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        return client;
+    }
+
+    public async Task<Paciente?> BuscarPacientePorDocumento(string documento)
+    {
+        try
+        {
+            //var client = CreateClient();
+            //var response = await client.GetAsync($"/Pacientes/{documento}");
+
+            using var client = new HttpClient();
+            client.BaseAddress = new Uri(_baseUrl);
+
+            string fullUrl = $"{_baseUrl}/Pacientes?CodigoEmp={_codigoEmpresa}&criterio={documento}";
+
+            // ✅ LOGS DE DEPURACIÓN
+            Console.WriteLine($"🔍 Buscando paciente...");
+            Console.WriteLine($"   📍 Base URL: {_baseUrl}");
+            Console.WriteLine($"   🏢 Código Empresa: {_codigoEmpresa}");
+            Console.WriteLine($"   📄 Documento: {documento}");
+            Console.WriteLine($"   🌐 URL completa: {_baseUrl}{fullUrl}");
+
+            var response = await client.GetAsync(fullUrl);
+            Console.WriteLine($"   📊 Status Code: {response.StatusCode}");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"   📦 JSON recibido: {json.Substring(0, Math.Min(200, json.Length))}...");
+                
+                // ⚠️ Configurar opciones para ignorar propiedades desconocidas
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                };
+                
+                try
+                {
+                    // Intentar deserializar como lista primero
+                    var pacientes = JsonSerializer.Deserialize<List<Paciente>>(json, options);
+                    if (pacientes != null && pacientes.Count > 0)
+                    {
+                        Console.WriteLine($"   ✅ Paciente encontrado (lista): {pacientes[0].NombrePaciente}");
+                        return pacientes[0];
+                    }
+                }
+                catch (JsonException ex1)
+                {
+                    Console.WriteLine($"   ⚠️ No es una lista, intentando como objeto único: {ex1.Message}");
+                    
+                    try
+                    {
+                        // Si falla, intentar como objeto único
+                        var paciente = JsonSerializer.Deserialize<Paciente>(json, options);
+                        if (paciente != null)
+                        {
+                            Console.WriteLine($"   ✅ Paciente encontrado (objeto): {paciente.NombrePaciente}");
+                            return paciente;
+                        }
+                    }
+                    catch (JsonException ex2)
+                    {
+                        Console.WriteLine($"   ❌ Error deserializando objeto: {ex2.Message}");
+                    }
+                }
+                
+                Console.WriteLine($"   ⚠️ No se pudo deserializar el JSON");
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"   ❌ Error en respuesta: {errorContent}");
+            }
+            
+            return null;
+
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error buscando paciente: {ex.Message}");
+            return null;
+        }
+    }
+
+    public async Task<List<Cita>> ObtenerCitasPorTelefono(string documento)
+    {
+        try
+        {
+            using var client = new HttpClient();
+            //client.BaseAddress = new Uri(_baseUrl);
+
+            string fullUrl = $"{_baseUrl}/CitasProgramadas?CodigoEmp={_codigoEmpresa}&criterio={documento}";
+
+            var response = await client.GetAsync(fullUrl);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"   📦 JSON: {json.Substring(0, Math.Min(300, json.Length))}");
+                
+                var options = new JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                };
+                
+                var citas = JsonSerializer.Deserialize<List<Cita>>(json, options) ?? new List<Cita>();
+                Console.WriteLine($"   ✅ {citas.Count} citas encontradas");
+                return citas;
+            }
+            
+            return new List<Cita>();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error obteniendo citas: {ex.Message}");
+            return new List<Cita>();
+        }
+    }
+
+    public async Task<bool> CrearHistoriaClinica(HistoriaClinica historia)
+    {
+        try
+        {
+            var client = CreateClient();
+            var json = JsonSerializer.Serialize(historia);
+            var content = new StringContent(json, System.Text.Encoding.UTF8, "application/json");
+            
+            var response = await client.PostAsync("/historia-clinica", content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error creando historia clínica: {ex.Message}");
+            return false;
+        }
+    }
+}
+
+// ============================================
+// GESTOR DE CONVERSACIONES (ACTUALIZADO)
+// ============================================
+
+public class ConversationManager
+{
+    private readonly Dictionary<string, Conversation> _conversations = new();
+    private readonly Dictionary<string, Operator> _operators = new();
+    private readonly object _lock = new();
+
+    public Conversation GetOrCreateConversation(string phoneNumber)
+    {
+        lock (_lock)
+        {
+            var conversation = _conversations.Values
+                .FirstOrDefault(c => c.PhoneNumber == phoneNumber && c.Status != ConversationStatus.Closed);
+
+            if (conversation == null)
+            {
+                conversation = new Conversation
+                {
+                    PhoneNumber = phoneNumber,
+                    CustomerName = $"Cliente {phoneNumber.Substring(Math.Max(0, phoneNumber.Length - 4))}"
+                };
+                _conversations[conversation.ConversationId] = conversation;
+                Console.WriteLine($"📞 Nueva conversación: {phoneNumber}");
+            }
+
+            return conversation;
+        }
+    }
+
+    public void AddMessage(string conversationId, Message message)
+    {
+        lock (_lock)
+        {
+            if (_conversations.TryGetValue(conversationId, out var conversation))
+            {
+                conversation.Messages.Add(message);
+                conversation.LastActivity = DateTime.UtcNow;
+            }
+        }
+    }
+
+    public bool AssignOperator(string conversationId, string operatorId)
+    {
+        lock (_lock)
+        {
+            if (_conversations.TryGetValue(conversationId, out var conversation) &&
+                _operators.TryGetValue(operatorId, out var operatorInfo))
+            {
+                conversation.AssignedOperator = operatorId;
+                conversation.Status = ConversationStatus.Active;
+                operatorInfo.ActiveConversations.Add(conversationId);
+                Console.WriteLine($"👤 Operador {operatorInfo.Name} asignado");
+                return true;
+            }
+            return false;
+        }
+    }
+
+    // ⭐ NUEVO: Devolver control al bot
+    public bool ReleaseToBot(string conversationId)
+    {
+        lock (_lock)
+        {
+            if (_conversations.TryGetValue(conversationId, out var conversation))
+            {
+                if (!string.IsNullOrEmpty(conversation.AssignedOperator) &&
+                    _operators.TryGetValue(conversation.AssignedOperator, out var operatorInfo))
+                {
+                    operatorInfo.ActiveConversations.Remove(conversationId);
+                }
+                
+                conversation.AssignedOperator = null;
+                conversation.Status = ConversationStatus.BotHandling;
+                conversation.Context.Clear(); // Limpiar contexto
+                Console.WriteLine($"🤖 Conversación {conversationId} devuelta al bot");
+                return true;
+            }
+            return false;
+        }
+    }
+
+    public void RegisterOperator(string operatorId, string name)
+    {
+        lock (_lock)
+        {
+            _operators[operatorId] = new Operator
+            {
+                OperatorId = operatorId,
+                Name = name,
+                IsAvailable = true
+            };
+            Console.WriteLine($"✅ Operador registrado: {name}");
+        }
+    }
+
+    public List<Conversation> GetWaitingConversations()
+    {
+        lock (_lock)
+        {
+            return _conversations.Values
+                .Where(c => c.Status == ConversationStatus.Waiting)
+                .OrderBy(c => c.CreatedAt)
+                .ToList();
+        }
+    }
+
+    public Conversation? GetConversation(string conversationId)
+    {
+        lock (_lock)
+        {
+            _conversations.TryGetValue(conversationId, out var conversation);
+            return conversation;
+        }
+    }
+
+    public Conversation? GetConversationByPhone(string phoneNumber)
+    {
+        lock (_lock)
+        {
+            return _conversations.Values
+                .FirstOrDefault(c => c.PhoneNumber == phoneNumber && c.Status != ConversationStatus.Closed);
+        }
+    }
+
+    public string? GetAvailableOperator()
+    {
+        lock (_lock)
+        {
+            return _operators.Values
+                .Where(o => o.IsAvailable && o.ActiveConversations.Count < 5)
+                .OrderBy(o => o.ActiveConversations.Count)
+                .FirstOrDefault()?.OperatorId;
+        }
+    }
+
+    public bool IsConversationActive(string phoneNumber)
+    {
+        lock (_lock)
+        {
+            var conversation = _conversations.Values
+                .FirstOrDefault(c => c.PhoneNumber == phoneNumber);
+            return conversation != null && conversation.Status == ConversationStatus.Active;
+        }
+
+    // ✅ NUEVO: Obtener TODAS las conversaciones activas
+    public List<Conversation> GetAllConversations()
+    {
+        lock (_lock)
+        {
+            return _conversations.Values
+                .Where(c => c.Status != ConversationStatus.Closed)
+                .OrderByDescending(c => c.LastActivity)
+                .ToList();
+        }
+    }
+
+    // ✅ NUEVO: Desregistrar operador (cuando se desconecta)
+    public void UnregisterOperator(string operatorId)
+    {
+        lock (_lock)
+        {
+            if (_operators.ContainsKey(operatorId))
+            {
+                var operatorName = _operators[operatorId].Name;
+                _operators.Remove(operatorId);
+                Console.WriteLine($"❌ Operador desregistrado: {operatorName} (ID: {operatorId})");
+
+                // Liberar conversaciones asignadas a este operador
+                var assignedConversations = _conversations.Values
+                    .Where(c => c.AssignedOperator == operatorId)
+                    .ToList();
+
+                foreach (var conv in assignedConversations)
+                {
+                    conv.AssignedOperator = null;
+                    conv.Status = ConversationStatus.Waiting;
+                    Console.WriteLine($"🔄 Conversación {conv.ConversationId} liberada y devuelta a espera");
+                }
+            }
+        }
+    }
+    }
+}
+
+// ============================================
+// SERVICIO DE WHATSAPP (ACTUALIZADO CON MULTIMEDIA)
+// ============================================
+
+public class WhatsAppService
+{
+    private readonly IConfiguration _configuration;
+    private readonly HttpClient _httpClient;
+
+    public WhatsAppService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _httpClient = new HttpClient();
+        _httpClient.DefaultRequestHeaders.Add("Authorization",
+            $"Bearer {_configuration["WhatsApp:AccessToken"]}");
+    }
+
+    public async Task<bool> SendMessage(string to, string message)
+    {
+        try
+        {
+            var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
+            var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
+
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                to = to,
+                type = "text",
+                text = new { body = message }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(url, content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"✅ Mensaje enviado a {to}");
+                return true;
+            }
+            
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error enviando mensaje: {ex.Message}");
+            return false;
+        }
+    }
+
+    // ⭐ NUEVO: Enviar imagen
+    public async Task<bool> SendImage(string to, string imageUrl, string? caption = null)
+    {
+        try
+        {
+            var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
+            var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
+
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                to = to,
+                type = "image",
+                image = new 
+                { 
+                    link = imageUrl,
+                    caption = caption
+                }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(url, content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error enviando imagen: {ex.Message}");
+            return false;
+        }
+    }
+
+    // ⭐ NUEVO: Enviar documento
+    public async Task<bool> SendDocument(string to, string documentUrl, string filename, string? caption = null)
+    {
+        try
+        {
+            var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
+            var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
+
+            Console.WriteLine($"📄 Enviando documento...");
+            Console.WriteLine($"   📱 Para: {to}");
+            Console.WriteLine($"   🔗 URL: {documentUrl}");
+            Console.WriteLine($"   📎 Nombre: {filename}");
+
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                to = to,
+                type = "document",
+                document = new 
+                { 
+                    link = documentUrl,
+                    filename = filename,
+                    caption = caption
+                }
+            };
+
+            var jsonPayload = JsonSerializer.Serialize(payload);
+            Console.WriteLine($"   📦 Payload: {jsonPayload}");
+
+            var content = new StringContent(
+                jsonPayload,
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(url, content);
+            
+            var responseBody = await response.Content.ReadAsStringAsync();
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"   ✅ Documento enviado exitosamente");
+                Console.WriteLine($"   📄 Respuesta: {responseBody}");
+                return true;
+            }
+            else
+            {
+                Console.WriteLine($"   ❌ Error enviando documento");
+                Console.WriteLine($"   📄 Status: {response.StatusCode}");
+                Console.WriteLine($"   📄 Respuesta: {responseBody}");
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Excepción enviando documento: {ex.Message}");
+            Console.WriteLine($"   Stack: {ex.StackTrace}");
+            return false;
+        }
+    }
+
+    // ⭐ NUEVO: Enviar documento desde archivo local
+    public async Task<bool> SendDocumentMessage(string to, string filePath, string filename, string? caption = null)
+    {
+        try
+        {
+            // Subir archivo a Cloudinary u otro servicio de almacenamiento
+            var cloudinaryService = new CloudinaryService(_configuration);
+            var publicUrl = await cloudinaryService.UploadDocument(filePath, filename);
+            
+            if (string.IsNullOrEmpty(publicUrl))
+            {
+                Console.WriteLine($"❌ Error subiendo documento a Cloudinary");
+                return false;
+            }
+
+            // Enviar documento usando la URL pública
+            return await SendDocument(to, publicUrl, filename, caption);
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error en SendDocumentMessage: {ex.Message}");
+            return false;
+        }
+    }
+
+    // ✅ NUEVO: Enviar mensaje con botones
+    public async Task<bool> SendButtonMessage(string to, string bodyText, List<ButtonOption> buttons)
+    {
+        try
+        {
+            var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
+            var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
+
+            var buttonsPayload = buttons.Select(b => new
+            {
+                type = "reply",
+                reply = new
+                {
+                    id = b.Id,
+                    title = b.Title
+                }
+            }).ToList();
+
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                to = to,
+                type = "interactive",
+                interactive = new
+                {
+                    type = "button",
+                    body = new { text = bodyText },
+                    action = new
+                    {
+                        buttons = buttonsPayload
+                    }
+                }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(url, content);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                Console.WriteLine($"✅ Mensaje con botones enviado a {to}");
+                return true;
+            }
+            
+            var errorContent = await response.Content.ReadAsStringAsync();
+            Console.WriteLine($"❌ Error: {errorContent}");
+            return false;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error enviando botones: {ex.Message}");
+            return false;
+        }
+    }
+
+    // ✅ NUEVO: Enviar lista interactiva
+    public async Task<bool> SendListMessage(string to, string bodyText, string buttonText, List<ListSection> sections)
+    {
+        try
+        {
+            var phoneNumberId = _configuration["WhatsApp:PhoneNumberId"];
+            var url = $"https://graph.facebook.com/v22.0/{phoneNumberId}/messages";
+
+            var sectionsPayload = sections.Select(s => new
+            {
+                title = s.Title,
+                rows = s.Rows.Select(r => new
+                {
+                    id = r.Id,
+                    title = r.Title,
+                    description = r.Description
+                }).ToList()
+            }).ToList();
+
+            var payload = new
+            {
+                messaging_product = "whatsapp",
+                to = to,
+                type = "interactive",
+                interactive = new
+                {
+                    type = "list",
+                    body = new { text = bodyText },
+                    action = new
+                    {
+                        button = buttonText,
+                        sections = sectionsPayload
+                    }
+                }
+            };
+
+            var content = new StringContent(
+                JsonSerializer.Serialize(payload),
+                System.Text.Encoding.UTF8,
+                "application/json"
+            );
+
+            var response = await _httpClient.PostAsync(url, content);
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Error enviando lista: {ex.Message}");
+            return false;
+        }
+    }
+
+}
+
+// ============================================
+// SERVICIO DE IA CON MENÚ INTERACTIVO
+// ============================================
+
+public class AIBotService
+{
+    private readonly WhatsAppService _whatsAppService;
+    private readonly ConversationManager _conversationManager;
+    private readonly ApiIntegrationService _apiService;
+
+    public AIBotService(WhatsAppService whatsAppService, ConversationManager conversationManager, ApiIntegrationService apiService)
+    {
+        _whatsAppService = whatsAppService;
+        _conversationManager = conversationManager;
+        _apiService = apiService;
+    }
+
+    public async Task<(bool handled, string? response)> ProcessMessage(string message, string phoneNumber)
+    {
+        // Si un operador está atendiendo, NO responder
+        if (_conversationManager.IsConversationActive(phoneNumber))
+        {
+            Console.WriteLine($"🚫 Bot NO responde - Operador activo");
+            return (false, null);
+        }
+
+        var conversation = _conversationManager.GetConversationByPhone(phoneNumber);
+        if (conversation == null) return (false, null);
+
+        var lowerMessage = message.ToLower().Trim();
+
+        // MANEJO DE CONTEXTO - Flujo de conversación
+        if (conversation.Context.ContainsKey("esperando_opcion"))
+        {
+            return await HandleMenuOption(lowerMessage, phoneNumber, conversation);
+        }
+
+        if (conversation.Context.ContainsKey("solicitando_documento"))
+        {
+            return await HandleDocumentRequest(message, phoneNumber, conversation);
+        }
+
+        if (conversation.Context.ContainsKey("registrando_historia"))
+        {
+            return await HandleHistoriaClinicaFlow(message, phoneNumber, conversation);
+        }
+
+        // Respuestas básicas
+        if (lowerMessage.Contains("hola") || lowerMessage.Contains("buenas"))
+        {
+            var welcomeMsg = "¡Hola! 👋 Bienvenido a nuestro servicio de salud.\n\n" +
+                        "Por favor selecciona una opción:\n" +
+                        "1️⃣ 📹 Agendar VideoLlamada\n" +
+                        "2️⃣ 📋 Registrar Historia Clínica\n" +
+                        "3️⃣ 📅 Consultar Citas Programadas\n" +
+                        "4️⃣ 👤 Hablar con un Agente\n\n" +
+                        "Escribe el número de tu opción (1, 2, 3 o 4)";
+            
+            conversation.Context["esperando_opcion"] = "menu_principal";
+            await _whatsAppService.SendMessage(phoneNumber, welcomeMsg);
+            return (true, welcomeMsg);
+        }
+
+        // Palabras clave para operador humano
+        var humanRequired = new[] { "agente", "operador", "persona", "problema", "queja" };
+        if (humanRequired.Any(k => lowerMessage.Contains(k)))
+        {
+            var transferMsg = "🔄 Te estoy conectando con un agente. Espera un momento...";
+            await _whatsAppService.SendMessage(phoneNumber, transferMsg);
+            return (false, transferMsg);
+        }
+
+        // Mensaje por defecto
+        var defaultMsg = "Escribe 'hola' para ver el menú de opciones. 😊";
+        await _whatsAppService.SendMessage(phoneNumber, defaultMsg);
+        return (true, defaultMsg);
+    }
+
+    private async Task<(bool, string?)> HandleMenuOption(string option, string phoneNumber, Conversation conversation)
+    {
+        string response;
+        
+        switch (option)
+        {
+            case "1":
+                response = "📹 *VideoLlamada*\n\n" +
+                        "Para agendar una videollamada, necesito validar tus datos.\n" +
+                        "Por favor ingresa tu número de documento:";
+                conversation.Context["solicitando_documento"] = "videollamada";
+                conversation.Context.Remove("esperando_opcion");
+                break;
+
+            case "2":
+                response = "📋 *Registro de Historia Clínica*\n\n" +
+                        "Vamos a registrar tus datos.\n" +
+                        "Por favor ingresa tu número de documento:";
+                conversation.Context["solicitando_documento"] = "historia";
+                conversation.Context.Remove("esperando_opcion");
+                break;
+
+            case "3":
+                response = "📅 *Consulta de Citas*\n\n" +
+                        "Por favor ingresa tu número de documento para consultar tus citas:";
+                conversation.Context["solicitando_documento"] = "consultar_citas";
+                conversation.Context.Remove("esperando_opcion");
+                break;
+
+            case "4":
+                response = "👤 Te estoy conectando con un agente...";
+                await _whatsAppService.SendMessage(phoneNumber, response);
+                conversation.Context.Clear();
+                return (false, response);
+
+            default:
+                response = "Por favor selecciona una opción válida (1, 2, 3 o 4).";
+                break;
+        }
+
+        await _whatsAppService.SendMessage(phoneNumber, response);
+        return (true, response);
+    }
+ 
+    private async Task<(bool, string?)> HandleDocumentRequest(string documento, string phoneNumber, Conversation conversation)
+    {
+        var tipoSolicitud = conversation.Context["solicitando_documento"];
+        conversation.Context.Remove("solicitando_documento");
+
+        var paciente = await _apiService.BuscarPacientePorDocumento(documento);
+
+        if (paciente != null)
+        {
+            var response = $"✅ ¡Hola {paciente.NombrePaciente} {paciente.ApellidoPaciente}!\n\n" +
+                        $"Datos encontrados:\n" +
+                        $"📄 Documento: {paciente.NoIdentificacion}\n" +
+                        $"📋 Caso No: {paciente.NoCaso}\n\n";
+
+            if (tipoSolicitud == "videollamada")
+            {
+                response += "Un agente te contactará pronto para agendar tu videollamada. 📹";
+                conversation.Context.Clear();
+            }
+            else if (tipoSolicitud == "historia")
+            {
+                response += "Ya tienes historia clínica registrada.\n¿Deseas actualizarla? (si/no)";
+                conversation.Context["actualizar_historia"] = paciente.NoCaso;
+            }
+            else if (tipoSolicitud == "consultar_citas")
+            {
+                // Consultar citas usando el documento
+                var citas = await _apiService.ObtenerCitasPorTelefono(documento);
+                
+                if (citas.Any())
+                {
+                    response = "📋 *Tus citas programadas:*\n\n";
+                    foreach (var cita in citas.Take(5))
+                    {
+                        response += $"📅 Fecha: {cita.Fecha}\n" +
+                                $"🕐 Hora: {cita.Hora}\n" +
+                                $"👨‍⚕️ Dr. {cita.Medico}\n" +
+                                $"🏥 {cita.citaControl}\n";
+                        
+                        if (!string.IsNullOrEmpty(cita.Observacion))
+                        {
+                            response += $"📝 Observación: {cita.Observacion}\n";
+                        }
+                        
+                        response += "\n";
+                    }
+                }
+                else
+                {
+                    response = "No tienes citas programadas actualmente. 📅";
+                }
+                
+                conversation.Context.Clear();
+            }
+
+            await _whatsAppService.SendMessage(phoneNumber, response);
+            return (true, response);
+        }
+        else
+        {
+            var response = "❌ No encontramos tus datos en el sistema.\n\n";
+            
+            if (tipoSolicitud == "historia")
+            {
+                response += "Vamos a crear tu historia clínica.\n" +
+                        "Ingresa tu nombre completo:";
+                conversation.Context["registrando_historia"] = "nombre";
+                conversation.Context["documento_nuevo"] = documento;
+            }
+            else
+            {
+                response += "Un agente te contactará para completar tu registro.";
+                conversation.Context.Clear();
+            }
+
+            await _whatsAppService.SendMessage(phoneNumber, response);
+            return (true, response);
+        }
+    }
+
+    private async Task<(bool, string?)> HandleHistoriaClinicaFlow(string input, string phoneNumber, Conversation conversation)
+    {
+        var paso = conversation.Context["registrando_historia"];
+        
+        // ✅ Permitir cancelar en cualquier momento
+        if (input.ToLower().Trim() == "cancelar" || input.ToLower().Trim() == "salir")
+        {
+            conversation.Context.Clear();
+            
+            var cancelMsg = "❌ Registro cancelado.\n\nEscribe 'hola' para volver al menú principal.";
+            await _whatsAppService.SendMessage(phoneNumber, cancelMsg);
+            return (true, cancelMsg);
+        }
+        
+        string response;
+
+        switch (paso)
+        {
+            case "nombre":
+                conversation.Context["nombre"] = input;
+                conversation.Context["registrando_historia"] = "fecha_nacimiento";
+                
+                // ✅ Enviar con botón de cancelar
+                var buttons = new List<ButtonOption>
+                {
+                    new ButtonOption { Id = "cancelar", Title = "❌ Cancelar" }
+                };
+                
+                response = "📅 Ingresa tu fecha de nacimiento (DD/MM/AAAA):\n\n_Ejemplo: 15/03/1990_";
+                await _whatsAppService.SendMessage(phoneNumber, response);
+                await _whatsAppService.SendButtonMessage(phoneNumber, "¿Deseas cancelar el registro?", buttons);
+                return (true, response);
+
+            case "fecha_nacimiento":
+                // ✅ Validar formato de fecha
+                if (!IsValidDate(input))
+                {
+                    response = "❌ Fecha inválida. Por favor usa el formato DD/MM/AAAA\n\nEjemplo: 15/03/1990\n\nEscribe 'cancelar' para salir.";
+                    await _whatsAppService.SendMessage(phoneNumber, response);
+                    return (true, response);
+                }
+                
+                conversation.Context["fecha_nacimiento"] = input;
+                conversation.Context["registrando_historia"] = "direccion";
+                response = "🏠 Ingresa tu dirección completa:\n\n_Escribe 'cancelar' para salir_";
+                break;
+
+            case "direccion":
+                conversation.Context["direccion"] = input;
+                conversation.Context["registrando_historia"] = "telefono";
+                response = "📱 Ingresa tu número de teléfono:\n\n_Escribe 'cancelar' para salir_";
+                break;
+
+            case "telefono":
+                // ✅ Validar teléfono
+                if (!IsValidPhone(input))
+                {
+                    response = "❌ Teléfono inválido. Debe contener solo números.\n\nEscribe 'cancelar' para salir.";
+                    await _whatsAppService.SendMessage(phoneNumber, response);
+                    return (true, response);
+                }
+                
+                conversation.Context["telefono"] = input;
+                conversation.Context["registrando_historia"] = "email";
+                response = "📧 Ingresa tu correo electrónico:\n\n_Ejemplo: nombre@ejemplo.com_\n_Escribe 'cancelar' para salir_";
+                break;
+
+            case "email":
+                // ✅ Validar email
+                if (!IsValidEmail(input))
+                {
+                    response = "❌ Email inválido. Por favor ingresa un email válido.\n\nEjemplo: nombre@ejemplo.com\n\nEscribe 'cancelar' para salir.";
+                    await _whatsAppService.SendMessage(phoneNumber, response);
+                    return (true, response);
+                }
+                
+                // ✅ Mostrar resumen antes de guardar
+                var resumen = $"📋 *Resumen de tus datos:*\n\n" +
+                            $"👤 Nombre: {conversation.Context["nombre"]}\n" +
+                            $"📅 Fecha Nacimiento: {conversation.Context["fecha_nacimiento"]}\n" +
+                            $"🏠 Dirección: {conversation.Context["direccion"]}\n" +
+                            $"📱 Teléfono: {conversation.Context["telefono"]}\n" +
+                            $"📧 Email: {input}\n\n" +
+                            $"¿Confirmas estos datos?";
+                
+                var confirmButtons = new List<ButtonOption>
+                {
+                    new ButtonOption { Id = "confirmar_registro", Title = "✅ Confirmar" },
+                    new ButtonOption { Id = "cancelar_registro", Title = "❌ Cancelar" }
+                };
+                
+                conversation.Context["email"] = input;
+                conversation.Context["registrando_historia"] = "confirmacion";
+                
+                await _whatsAppService.SendButtonMessage(phoneNumber, resumen, confirmButtons);
+                return (true, resumen);
+
+            case "confirmacion":
+                if (input == "confirmar_registro" || input.ToLower() == "si" || input.ToLower() == "confirmar")
+                {
+                    // Guardar en BD vía API
+                    var historia = new HistoriaClinica
+                    {
+                        Documento = conversation.Context["documento_nuevo"],
+                        NombreCompleto = conversation.Context["nombre"],
+                        Direccion = conversation.Context["direccion"],
+                        Telefono = conversation.Context["telefono"],
+                        Email = conversation.Context["email"]
+                    };
+
+                    var success = await _apiService.CrearHistoriaClinica(historia);
+                    
+                    if (success)
+                    {
+                        response = "✅ *¡Historia clínica creada exitosamente!*\n\n" +
+                                "Tus datos han sido registrados correctamente.\n\n" +
+                                "Escribe 'hola' para volver al menú principal.";
+                    }
+                    else
+                    {
+                        response = "❌ Hubo un error al guardar tus datos.\n" +
+                                "Un agente te contactará para ayudarte.";
+                    }
+                    
+                    conversation.Context.Clear();
+                }
+                else
+                {
+                    response = "❌ Registro cancelado.\n\nEscribe 'hola' para volver al menú principal.";
+                    conversation.Context.Clear();
+                }
+                break;
+
+            default:
+                response = "Escribe 'hola' para comenzar nuevamente.";
+                conversation.Context.Clear();
+                break;
+        }
+
+        await _whatsAppService.SendMessage(phoneNumber, response);
+        return (true, response);
+    }
+
+    // ✅ Métodos de validación
+    private bool IsValidDate(string date)
+    {
+        var parts = date.Split('/');
+        if (parts.Length != 3) return false;
+        
+        return int.TryParse(parts[0], out var day) && day >= 1 && day <= 31 &&
+            int.TryParse(parts[1], out var month) && month >= 1 && month <= 12 &&
+            int.TryParse(parts[2], out var year) && year >= 1900 && year <= DateTime.Now.Year;
+    }
+
+    private bool IsValidPhone(string phone)
+    {
+        var cleaned = phone.Replace(" ", "").Replace("-", "").Replace("+", "");
+        return cleaned.Length >= 7 && cleaned.All(char.IsDigit);
+    }
+
+    private bool IsValidEmail(string email)
+    {
+        try
+        {
+            var addr = new System.Net.Mail.MailAddress(email);
+            return addr.Address == email && email.Contains("@") && email.Contains(".");
+        }
+        catch
+        {
+            return false;
+        }
+    }
+}
+
+// ============================================
 // ============================================
 // SIGNALR HUB (CORREGIDO - Nombres consistentes)
 // ============================================
@@ -389,5 +1472,130 @@ public class ChatHub : Hub
                 Console.WriteLine($"   🔗 URL: {videoCallUrl}");
             }
         }
+    }
+}
+
+// ============================================
+// SERVICIO DE CLOUDINARY
+// ============================================
+
+public class CloudinaryService
+{
+    private readonly IConfiguration _configuration;
+    private readonly string _cloudName;
+    private readonly string _apiKey;
+    private readonly string _apiSecret;
+
+    public CloudinaryService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _cloudName = _configuration["Cloudinary:CloudName"] ?? "";
+        _apiKey = _configuration["Cloudinary:ApiKey"] ?? "";
+        _apiSecret = _configuration["Cloudinary:ApiSecret"] ?? "";
+    }
+
+    public async Task<string?> UploadDocument(string filePath, string filename)
+    {
+        try
+        {
+            Console.WriteLine($"📤 Subiendo documento a Cloudinary: {filename}");
+            
+            // Verificar que el archivo existe
+            if (!File.Exists(filePath))
+            {
+                Console.WriteLine($"❌ Archivo no encontrado: {filePath}");
+                return null;
+            }
+
+            using var client = new HttpClient();
+            using var multipartContent = new MultipartFormDataContent();
+            
+            // Leer el archivo
+            var fileBytes = await File.ReadAllBytesAsync(filePath);
+            var fileContent = new ByteArrayContent(fileBytes);
+            fileContent.Headers.ContentType = new MediaTypeHeaderValue("application/pdf");
+            
+            multipartContent.Add(fileContent, "file", filename);
+            multipartContent.Add(new StringContent(_apiKey), "api_key");
+            multipartContent.Add(new StringContent(GenerateTimestamp()), "timestamp");
+            multipartContent.Add(new StringContent("document"), "resource_type");
+            
+            // Generar signature
+            var signature = GenerateSignature();
+            multipartContent.Add(new StringContent(signature), "signature");
+            
+            var uploadUrl = $"https://api.cloudinary.com/v1_1/{_cloudName}/raw/upload";
+            var response = await client.PostAsync(uploadUrl, multipartContent);
+            
+            if (response.IsSuccessStatusCode)
+            {
+                var responseContent = await response.Content.ReadAsStringAsync();
+                var jsonDoc = JsonDocument.Parse(responseContent);
+                var secureUrl = jsonDoc.RootElement.GetProperty("secure_url").GetString();
+                
+                Console.WriteLine($"✅ Documento subido exitosamente");
+                Console.WriteLine($"   🔗 URL: {secureUrl}");
+                
+                return secureUrl;
+            }
+            else
+            {
+                var errorContent = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"❌ Error subiendo a Cloudinary: {response.StatusCode}");
+                Console.WriteLine($"   📄 Respuesta: {errorContent}");
+                return null;
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"❌ Excepción en UploadDocument: {ex.Message}");
+            Console.WriteLine($"   Stack: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    private string GenerateTimestamp()
+    {
+        return DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString();
+    }
+
+    private string GenerateSignature()
+    {
+        var timestamp = GenerateTimestamp();
+        var stringToSign = $"timestamp={timestamp}{_apiSecret}";
+        
+        using var sha1 = System.Security.Cryptography.SHA1.Create();
+        var hash = sha1.ComputeHash(System.Text.Encoding.UTF8.GetBytes(stringToSign));
+        return BitConverter.ToString(hash).Replace("-", "").ToLower();
+    }
+}
+
+// ============================================
+// SERVICIO DE JITSI
+// ============================================
+
+public class JitsiService
+{
+    private readonly IConfiguration _configuration;
+    private readonly string _jitsiDomain;
+
+    public JitsiService(IConfiguration configuration)
+    {
+        _configuration = configuration;
+        _jitsiDomain = _configuration["Jitsi:Domain"] ?? "meet.jit.si";
+    }
+
+    public string GenerateVideoCallLink(string phoneNumber, string customerName)
+    {
+        // Crear un ID único para la sala
+        var roomId = $"telemedicina-{phoneNumber}-{Guid.NewGuid().ToString().Substring(0, 8)}";
+        
+        // Crear la URL de Jitsi
+        var videoCallUrl = $"https://{_jitsiDomain}/{roomId}";
+        
+        Console.WriteLine($"📹 Generada videollamada para {customerName}");
+        Console.WriteLine($"   🔗 Sala: {roomId}");
+        
+        return videoCallUrl;
     }
 }

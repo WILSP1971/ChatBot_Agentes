@@ -1,10 +1,10 @@
 // operator-login.js
 // Sistema de autenticación de operadores para el panel (CORREGIDO)
 
+
 (function() {
     'use strict';
 
-    
     const OPERATOR_NAME_KEY = 'operatorName';
     
     // Función para obtener el nombre del operador guardado

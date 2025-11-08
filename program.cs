@@ -511,6 +511,7 @@ public class ConversationManager
                 .FirstOrDefault(c => c.PhoneNumber == phoneNumber);
             return conversation != null && conversation.Status == ConversationStatus.Active;
         }
+    }
 
     // ✅ NUEVO: Obtener TODAS las conversaciones activas
     public List<Conversation> GetAllConversations()
@@ -548,7 +549,6 @@ public class ConversationManager
                 }
             }
         }
-    }
     }
 }
 
